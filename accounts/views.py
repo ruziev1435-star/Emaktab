@@ -1,12 +1,12 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import render
 from django.utils import timezone
 
-from attendance.models import AttendanceRecord
+from core.models import ClassSubjectTeacher, SchoolClass
 from meetings.models import Meeting
-from quizzes.models import Quiz
 
-from .models import User
+from .models import StudentProfile, User
 
 
 @login_required
@@ -47,38 +47,67 @@ def student_dashboard(request):
 
 def teacher_dashboard(request):
     user = request.user
-    my_quizzes = Quiz.objects.filter(created_by=user)[:10]
-    homeroom_classes = user.homeroom_classes.all()
     today = timezone.localdate()
-    todays_attendance = AttendanceRecord.objects.filter(
-        date=today, student__student_profile__school_class__in=homeroom_classes
-    ) if homeroom_classes else AttendanceRecord.objects.none()
+
+    homeroom_class_ids = set(user.homeroom_classes.values_list("id", flat=True))
+    assignments = list(
+        ClassSubjectTeacher.objects.filter(teacher=user).select_related("school_class", "subject")
+    )
+    taught_class_ids = {a.school_class_id for a in assignments}
+
+    classes = SchoolClass.objects.filter(
+        Q(id__in=homeroom_class_ids) | Q(id__in=taught_class_ids)
+    ).order_by("name")
+
+    my_classes = []
+    for school_class in classes:
+        my_classes.append(
+            {
+                "school_class": school_class,
+                "is_homeroom": school_class.id in homeroom_class_ids,
+                "subjects": [a.subject for a in assignments if a.school_class_id == school_class.id],
+                "students": StudentProfile.objects.filter(school_class=school_class)
+                .select_related("user")
+                .order_by("user__first_name"),
+            }
+        )
 
     return _render_dashboard(
         request,
         "accounts/dashboard_teacher.html",
         {
-            "my_quizzes": my_quizzes,
-            "homeroom_classes": homeroom_classes,
-            "todays_attendance": todays_attendance,
+            "today": today,
+            "my_classes": my_classes,
         },
     )
 
 
 def staff_dashboard(request):
     user = request.user
-    upcoming_meetings = Meeting.objects.filter(
-        staff=user, start_time__gte=timezone.now(), status__in=["pending", "confirmed"]
-    )[:10]
     today = timezone.localdate()
-    todays_attendance = AttendanceRecord.objects.filter(date=today).select_related("student")
+
+    meeting_requests = (
+        Meeting.objects.filter(
+            staff=user, start_time__gte=timezone.now(), status__in=["pending", "confirmed"]
+        )
+        .select_related("student")
+        .order_by("start_time")[:10]
+    )
+
+    students = (
+        StudentProfile.objects.select_related("user", "school_class")
+        .order_by("user__first_name")[:25]
+    )
+    student_count = StudentProfile.objects.count()
 
     return _render_dashboard(
         request,
         "accounts/dashboard_staff.html",
         {
-            "upcoming_meetings": upcoming_meetings,
-            "todays_attendance": todays_attendance,
+            "today": today,
+            "meeting_requests": meeting_requests,
+            "students": students,
+            "student_count": student_count,
         },
     )
 

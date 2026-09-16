@@ -1,38 +1,65 @@
 {% extends "base.html" %}
 {% block title %}Dashboard · Kundalik+{% endblock %}
 {% block content %}
-<h1 class="h3 mb-4">Hi, {{ user.first_name|default:user.username }} 👋</h1>
+<div class="mb-4">
+  <div class="kp-greeting-eyebrow">{{ today|date:"l, d F" }}</div>
+  <h1 class="h3 mb-0">Hi, {{ user.first_name|default:user.username }} 👋</h1>
+</div>
 
-<div class="row g-3">
-  <div class="col-md-6">
-    <div class="card kp-card p-3 h-100">
-      <h2 class="h5">🗓️ Upcoming meetings</h2>
-      <ul class="list-group list-group-flush">
-        {% for meeting in upcoming_meetings %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>{{ meeting.student.get_full_name|default:meeting.student.username }} — {{ meeting.start_time|date:"D d M, H:i" }}{% if meeting.topic %} · {{ meeting.topic }}{% endif %}</span>
-            <span class="badge bg-{% if meeting.status == 'confirmed' %}success{% elif meeting.status == 'pending' %}warning{% else %}secondary{% endif %}">{{ meeting.get_status_display }}</span>
-          </li>
-        {% empty %}
-          <li class="list-group-item text-muted">No meetings booked.</li>
-        {% endfor %}
-      </ul>
-      <a href="{% url 'meetings:my_meetings' %}" class="btn btn-sm btn-primary mt-3 align-self-start">Manage meetings</a>
+<div class="kp-card p-4 mb-3">
+  <h2 class="h5 mb-3">Meeting requests</h2>
+  {% if meeting_requests %}
+    {% for meeting in meeting_requests %}
+    <div class="kp-list-row">
+      <div>
+        <div class="fw-semibold">{{ meeting.student.get_full_name|default:meeting.student.username }}</div>
+        <div class="small text-muted">
+          {{ meeting.start_time|date:"D d M, H:i" }}{% if meeting.topic %} · {{ meeting.topic }}{% endif %}
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-{% if meeting.status == 'confirmed' %}success{% else %}warning text-dark{% endif %}">
+          {{ meeting.get_status_display }}
+        </span>
+        {% if meeting.status == 'pending' %}
+        <form method="post" action="{% url 'meetings:update_status' meeting.id 'confirmed' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'dashboard' %}">
+          <button class="btn btn-sm btn-success" type="submit">Confirm</button>
+        </form>
+        <form method="post" action="{% url 'meetings:update_status' meeting.id 'cancelled' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'dashboard' %}">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Decline</button>
+        </form>
+        {% endif %}
+      </div>
     </div>
-  </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted small mb-0">No meeting requests right now.</p>
+  {% endif %}
+</div>
 
-  <div class="col-md-6">
-    <div class="card kp-card p-3 h-100">
-      <h2 class="h5">✅ School-wide attendance today</h2>
-      <p class="mb-2">{{ todays_attendance.count }} student{{ todays_attendance.count|pluralize }} confirmed so far.</p>
-      <ul class="list-group list-group-flush" style="max-height:240px; overflow-y:auto;">
-        {% for record in todays_attendance %}
-          <li class="list-group-item">{{ record.student.get_full_name|default:record.student.username }} — {{ record.confirmed_at|time:"H:i" }}</li>
-        {% empty %}
-          <li class="list-group-item text-muted">No confirmations yet.</li>
-        {% endfor %}
-      </ul>
-    </div>
+<div class="kp-card p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 mb-0">Students</h2>
+    <span class="text-muted small">{{ student_count }} total</span>
   </div>
+  {% if students %}
+    <div class="kp-list-scroll">
+      {% for student_profile in students %}
+      <div class="kp-list-row">
+        <span>{{ student_profile.user.get_full_name|default:student_profile.user.username }}</span>
+        <span class="text-muted small">{{ student_profile.school_class|default:"—" }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% if student_count > students|length %}
+    <p class="text-muted small mt-2 mb-0">Showing {{ students|length }} of {{ student_count }}.</p>
+    {% endif %}
+  {% else %}
+    <p class="text-muted small mb-0">No students yet.</p>
+  {% endif %}
 </div>
 {% endblock %}

@@ -1,41 +1,47 @@
 {% extends "base.html" %}
 {% block title %}Dashboard · Kundalik+{% endblock %}
 {% block content %}
-<h1 class="h3 mb-4">Hi, {{ user.first_name|default:user.username }} 👋</h1>
-
-<div class="row g-3">
-  <div class="col-md-6">
-    <div class="card kp-card p-3 h-100">
-      <h2 class="h5">📝 My unit tests</h2>
-      <ul class="list-group list-group-flush">
-        {% for quiz in my_quizzes %}
-          <li class="list-group-item">{{ quiz.topic }} — {{ quiz.subject }} ({{ quiz.school_class }})</li>
-        {% empty %}
-          <li class="list-group-item text-muted">No tests created yet. Use the admin to add one.</li>
-        {% endfor %}
-      </ul>
-    </div>
+<div class="mb-4">
+  <div class="kp-greeting-eyebrow">
+    {{ today|date:"l, d F" }} · {{ my_classes|length }} class{{ my_classes|length|pluralize:"es" }}
   </div>
-
-  <div class="col-md-6">
-    <div class="card kp-card p-3 h-100">
-      <h2 class="h5">✅ Today's attendance {% if homeroom_classes %}({{ homeroom_classes.0 }}){% endif %}</h2>
-      {% if homeroom_classes %}
-        <ul class="list-group list-group-flush">
-          {% for record in todays_attendance %}
-            <li class="list-group-item">{{ record.student.get_full_name|default:record.student.username }} — confirmed {{ record.confirmed_at|time:"H:i" }}</li>
-          {% empty %}
-            <li class="list-group-item text-muted">No confirmations yet today.</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="text-muted">You aren't a homeroom teacher for any class.</p>
-      {% endif %}
-    </div>
-  </div>
+  <h1 class="h3 mb-0">Hi, {{ user.first_name|default:user.username }} 👋</h1>
 </div>
 
-<div class="mt-3">
-  <a href="{% url 'meetings:staff_list' %}" class="btn btn-outline-primary">View meetings</a>
+{% if my_classes %}
+  {% for entry in my_classes %}
+  <div class="kp-card p-4 mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <h2 class="h5 mb-1">
+          {{ entry.school_class }}
+          {% if entry.is_homeroom %}<span class="badge bg-primary-subtle text-primary-emphasis">Homeroom</span>{% endif %}
+        </h2>
+        {% if entry.subjects %}
+        <div class="small text-muted">
+          Teaching {% for subject in entry.subjects %}{{ subject }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <span class="text-muted small">{{ entry.students.count }} student{{ entry.students.count|pluralize }}</span>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      {% for student_profile in entry.students %}
+        <span class="badge rounded-pill text-bg-light border">{{ student_profile.user.get_full_name|default:student_profile.user.username }}</span>
+      {% empty %}
+        <span class="text-muted small">No students assigned to this class yet.</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+<div class="kp-placeholder-card">
+  <div class="kp-placeholder-card__icon">🏫</div>
+  <h2 class="h6 mb-1">No classes yet</h2>
+  <p class="text-muted mb-0 small">
+    Once you're set as a homeroom or subject teacher for a class, it'll show up here with its students.
+  </p>
 </div>
+{% endif %}
 {% endblock %}

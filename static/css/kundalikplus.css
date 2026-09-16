@@ -132,3 +132,25 @@
   margin-left: 0.5rem;
   vertical-align: middle;
 }
+
+/* Teacher / counsellor / principal dashboards — same card language as the
+   student dashboard's CTA/placeholder cards, applied to rosters and lists. */
+
+.kp-list-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid #eef1f7;
+}
+
+.kp-list-row:last-child {
+  border-bottom: none;
+}
+
+.kp-list-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+}
