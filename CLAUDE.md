@@ -44,9 +44,16 @@ concern and register it in `INSTALLED_APPS` in `kundalikplus/settings.py`.
 Four login roles only: `principal`, `counsellor`, `teacher`, `student` (see
 `accounts.models.User.Role`). Parents are **not** a login role — they're
 tracked via `accounts.models.Parent` (name + Telegram chat id + linked
-`StudentProfile`s) purely as a notification target. Default passwords are
-simple; students can change their own via `/password-change/`
-(`accounts.views.KundalikPasswordChangeView`).
+`StudentProfile`s) purely as a notification target. One shared login page
+(`/login/`) authenticates any role; `accounts.views.dashboard` then dispatches
+to a role-specific dashboard template.
+
+Passwords are simple by default (`AUTH_PASSWORD_VALIDATORS` is deliberately
+empty — see `kundalikplus/settings.py`). `User.can_change_password`
+(default `False`, clamped to `False` for non-students on save) is the
+underlying support for letting a student opt into setting their own password
+later; there is no self-service password-change UI yet — building it means
+adding a view/form gated on that flag, not a new model.
 
 ## Database
 

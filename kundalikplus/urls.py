@@ -3,7 +3,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from accounts.views import KundalikPasswordChangeView, dashboard
+from accounts.views import dashboard
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -15,14 +15,8 @@ urlpatterns = [
         name="login",
     ),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
-    path("password-change/", KundalikPasswordChangeView.as_view(), name="password_change"),
-    path(
-        "password-change/done/",
-        auth_views.PasswordChangeDoneView.as_view(
-            template_name="accounts/password_change_done.html"
-        ),
-        name="password_change_done",
-    ),
+    # No password-change UI yet — accounts.models.User.can_change_password is
+    # the underlying support for it, wired up in a later task.
     path("meetings/", include("meetings.urls")),
     path("attendance/", include("attendance.urls")),
     path("quizzes/", include("quizzes.urls")),

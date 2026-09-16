@@ -104,21 +104,14 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
-]
+#
+# Kundalik+ deliberately ships with no complexity requirements: schools assign
+# simple default passwords (e.g. a surname + short number), and students only
+# get the option to set their own later, once `User.can_change_password` is
+# enabled for them. Intentionally left empty rather than tuned down, so this
+# applies uniformly wherever Django would otherwise enforce validators (admin
+# user creation, the future self-service change-password form, etc).
+AUTH_PASSWORD_VALIDATORS = []
 
 
 # Internationalization

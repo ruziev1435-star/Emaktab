@@ -15,9 +15,21 @@ class User(AbstractUser):
     telegram_chat_id = models.CharField(max_length=64, blank=True, null=True, unique=True)
     telegram_link_code = models.CharField(max_length=16, blank=True)
 
+    # Accounts start on a simple, school-assigned default password. Self-service
+    # password change is a student-only capability that gets switched on later
+    # (per student, not all-or-nothing) — this flag is what the future
+    # password-change view/UI will gate on. No password-change UI exists yet;
+    # this is just the underlying support for it.
+    can_change_password = models.BooleanField(
+        default=False,
+        help_text="Students only: enables the self-service password-change flow for this account.",
+    )
+
     def save(self, *args, **kwargs):
         if not self.telegram_link_code:
             self.telegram_link_code = secrets.token_hex(4)
+        if self.role != self.Role.STUDENT:
+            self.can_change_password = False
         super().save(*args, **kwargs)
 
     @property

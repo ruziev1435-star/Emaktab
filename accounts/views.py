@@ -1,10 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth.views import PasswordChangeView
 from django.shortcuts import render
-from django.urls import reverse_lazy
 from django.utils import timezone
 
 from attendance.models import AttendanceRecord
@@ -108,16 +105,3 @@ def staff_dashboard(request):
 
 def _render_dashboard(request, template_name, extra_context):
     return render(request, template_name, extra_context)
-
-
-class BootstrapPasswordChangeForm(PasswordChangeForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs["class"] = "form-control"
-
-
-class KundalikPasswordChangeView(PasswordChangeView):
-    template_name = "accounts/password_change.html"
-    form_class = BootstrapPasswordChangeForm
-    success_url = reverse_lazy("password_change_done")
