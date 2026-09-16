@@ -9,8 +9,12 @@ favor working, showable features over completeness or polish.
 ## Stack
 
 - **Backend:** Django 5 (Python), SQLite for local/demo use
-- **Frontend:** Django templates + Bootstrap 5 (via CDN), no build step — kept
-  intentionally lightweight; a dedicated frontend may come later
+- **Frontend:** Django templates + Bootstrap 5, no build step — kept
+  intentionally lightweight; a dedicated frontend may come later. Bootstrap's
+  CSS/JS are vendored into `static/vendor/bootstrap/` (not loaded from a CDN)
+  so the demo doesn't depend on outbound network access to a third party —
+  update by re-pulling the `bootstrap` npm package's `dist/` files at the
+  version pinned there.
 - **Bot:** python-telegram-bot, since Telegram is the primary channel for
   Uzbek users (notifications + quick actions)
 

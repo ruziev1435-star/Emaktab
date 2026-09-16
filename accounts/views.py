@@ -1,13 +1,10 @@
-from datetime import timedelta
-
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils import timezone
 
 from attendance.models import AttendanceRecord
-from library.models import Article
 from meetings.models import Meeting
-from quizzes.models import Exam, Quiz, QuizAttempt
+from quizzes.models import Quiz
 
 from .models import User
 
@@ -29,38 +26,21 @@ def student_dashboard(request):
     today = timezone.localdate()
     school_class = getattr(getattr(user, "student_profile", None), "school_class", None)
 
-    upcoming_exams = []
-    if school_class:
-        upcoming_exams = list(
-            Exam.objects.filter(school_class=school_class, date__gte=today).order_by("date")[:5]
+    next_meeting = (
+        Meeting.objects.filter(
+            student=user, start_time__gte=timezone.now(), status__in=["pending", "confirmed"]
         )
-    has_urgent_exam = any((exam.date - today) <= timedelta(days=7) for exam in upcoming_exams)
-
-    attended_today = AttendanceRecord.objects.filter(student=user, date=today).exists()
-
-    pending_quizzes = []
-    if school_class:
-        taken_ids = QuizAttempt.objects.filter(student=user).values_list("quiz_id", flat=True)
-        pending_quizzes = list(
-            Quiz.objects.filter(school_class=school_class).exclude(id__in=taken_ids)[:5]
-        )
-
-    upcoming_meetings = Meeting.objects.filter(
-        student=user, start_time__gte=timezone.now(), status__in=["pending", "confirmed"]
-    )[:5]
-
-    latest_articles = Article.objects.all()[:4]
+        .select_related("staff")
+        .first()
+    )
 
     return _render_dashboard(
         request,
         "accounts/dashboard_student.html",
         {
-            "upcoming_exams": upcoming_exams,
-            "has_urgent_exam": has_urgent_exam,
-            "attended_today": attended_today,
-            "pending_quizzes": pending_quizzes,
-            "upcoming_meetings": upcoming_meetings,
-            "latest_articles": latest_articles,
+            "today": today,
+            "school_class": school_class,
+            "next_meeting": next_meeting,
         },
     )
 

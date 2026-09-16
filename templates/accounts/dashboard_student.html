@@ -1,82 +1,39 @@
 {% extends "base.html" %}
 {% block title %}Dashboard · Kundalik+{% endblock %}
 {% block content %}
-<h1 class="h3 mb-4">Hi, {{ user.first_name|default:user.username }} 👋</h1>
-
-{% if upcoming_exams %}
 <div class="mb-4">
-  {% with next_exam=upcoming_exams.0 %}
-  <a href="{% url 'quizzes:list' %}" class="kp-exam-btn {% if has_urgent_exam %}kp-exam-btn--urgent{% else %}btn btn-outline-danger{% endif %} text-center">
-    📚 {% if has_urgent_exam %}Upcoming exam soon!{% else %}Upcoming exam{% endif %}
-    — {{ next_exam.title }} ({{ next_exam.subject }}) on {{ next_exam.date }}
+  <div class="kp-greeting-eyebrow">{{ today|date:"l, d F" }}{% if school_class %} · {{ school_class }}{% endif %}</div>
+  <h1 class="h3 mb-0">Hi, {{ user.first_name|default:user.username }} 👋</h1>
+</div>
+
+<div class="mb-4">
+  <a href="{% url 'meetings:staff_list' %}" class="kp-meeting-cta">
+    <span class="kp-meeting-cta__icon">🗓️</span>
+    <div>
+      <div class="kp-meeting-cta__title">
+        {% if next_meeting %}Your next meeting{% else %}Book a meeting{% endif %}
+      </div>
+      <div class="kp-meeting-cta__subtitle">
+        {% if next_meeting %}
+          With {{ next_meeting.staff.get_full_name|default:next_meeting.staff.username }}
+          on {{ next_meeting.start_time|date:"D d M, H:i" }} — tap to manage
+        {% else %}
+          Talk to your counsellor or principal — no more delayed or last-minute plans
+        {% endif %}
+      </div>
+    </div>
+    <span class="kp-meeting-cta__arrow">→</span>
   </a>
-  {% endwith %}
-</div>
-{% endif %}
-
-<div class="row g-3">
-  <div class="col-md-4">
-    <div class="card kp-card p-3 h-100">
-      <h2 class="h5">✅ Attendance</h2>
-      {% if attended_today %}
-        <p class="text-success mb-2">Confirmed for today.</p>
-      {% else %}
-        <p class="text-muted mb-2">Not confirmed yet today.</p>
-      {% endif %}
-      <a href="{% url 'attendance:confirm' %}" class="btn btn-sm btn-primary">Attendance</a>
-    </div>
-  </div>
-
-  <div class="col-md-4">
-    <div class="card kp-card p-3 h-100">
-      <h2 class="h5">📝 Unit tests</h2>
-      {% if pending_quizzes %}
-        <p class="mb-2">{{ pending_quizzes|length }} new test{{ pending_quizzes|length|pluralize }} to take.</p>
-      {% else %}
-        <p class="text-muted mb-2">You're all caught up.</p>
-      {% endif %}
-      <a href="{% url 'quizzes:list' %}" class="btn btn-sm btn-primary">Go to unit tests</a>
-    </div>
-  </div>
-
-  <div class="col-md-4">
-    <div class="card kp-card p-3 h-100">
-      <h2 class="h5">🗓️ Meetings</h2>
-      {% if upcoming_meetings %}
-        <p class="mb-2">{{ upcoming_meetings|length }} upcoming meeting{{ upcoming_meetings|length|pluralize }}.</p>
-      {% else %}
-        <p class="text-muted mb-2">No meetings booked.</p>
-      {% endif %}
-      <a href="{% url 'meetings:staff_list' %}" class="btn btn-sm btn-primary">Book a meeting</a>
-    </div>
-  </div>
 </div>
 
-<div class="row mt-3 g-3">
-  <div class="col-md-6">
-    <div class="card kp-card p-3">
-      <h2 class="h5">📰 Library</h2>
-      <ul class="list-unstyled mb-2">
-        {% for article in latest_articles %}
-          <li class="mb-1"><a href="{{ article.source_url }}" target="_blank" rel="noopener">{{ article.title }}</a> <span class="text-muted small">· {{ article.source_name }}</span></li>
-        {% empty %}
-          <li class="text-muted">No articles yet.</li>
-        {% endfor %}
-      </ul>
-      <a href="{% url 'library:list' %}" class="btn btn-sm btn-outline-primary align-self-start">Browse library</a>
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div class="card kp-card p-3">
-      <h2 class="h5">📅 Upcoming exams</h2>
-      <ul class="list-unstyled mb-0">
-        {% for exam in upcoming_exams %}
-          <li>{{ exam.date }} — {{ exam.title }} ({{ exam.subject }})</li>
-        {% empty %}
-          <li class="text-muted">Nothing scheduled.</li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
+<div class="kp-placeholder-card">
+  <div class="kp-placeholder-card__icon">📊</div>
+  <h2 class="h6 mb-1">
+    Schedule &amp; grades
+    <span class="kp-badge-soon">Coming soon</span>
+  </h2>
+  <p class="text-muted mb-0 small">
+    Your class timetable and grades will show up here once they're synced from Kundalik.
+  </p>
 </div>
 {% endblock %}
