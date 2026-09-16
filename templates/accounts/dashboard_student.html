@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Kundalik+{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Hi, {{ user.first_name|default:user.username }} 👋</h1>
+
+{% if upcoming_exams %}
+<div class="mb-4">
+  {% with next_exam=upcoming_exams.0 %}
+  <a href="{% url 'quizzes:list' %}" class="kp-exam-btn {% if has_urgent_exam %}kp-exam-btn--urgent{% else %}btn btn-outline-danger{% endif %} text-center">
+    📚 {% if has_urgent_exam %}Upcoming exam soon!{% else %}Upcoming exam{% endif %}
+    — {{ next_exam.title }} ({{ next_exam.subject }}) on {{ next_exam.date }}
+  </a>
+  {% endwith %}
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card kp-card p-3 h-100">
+      <h2 class="h5">✅ Attendance</h2>
+      {% if attended_today %}
+        <p class="text-success mb-2">Confirmed for today.</p>
+      {% else %}
+        <p class="text-muted mb-2">Not confirmed yet today.</p>
+      {% endif %}
+      <a href="{% url 'attendance:confirm' %}" class="btn btn-sm btn-primary">Attendance</a>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card kp-card p-3 h-100">
+      <h2 class="h5">📝 Unit tests</h2>
+      {% if pending_quizzes %}
+        <p class="mb-2">{{ pending_quizzes|length }} new test{{ pending_quizzes|length|pluralize }} to take.</p>
+      {% else %}
+        <p class="text-muted mb-2">You're all caught up.</p>
+      {% endif %}
+      <a href="{% url 'quizzes:list' %}" class="btn btn-sm btn-primary">Go to unit tests</a>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card kp-card p-3 h-100">
+      <h2 class="h5">🗓️ Meetings</h2>
+      {% if upcoming_meetings %}
+        <p class="mb-2">{{ upcoming_meetings|length }} upcoming meeting{{ upcoming_meetings|length|pluralize }}.</p>
+      {% else %}
+        <p class="text-muted mb-2">No meetings booked.</p>
+      {% endif %}
+      <a href="{% url 'meetings:staff_list' %}" class="btn btn-sm btn-primary">Book a meeting</a>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-3 g-3">
+  <div class="col-md-6">
+    <div class="card kp-card p-3">
+      <h2 class="h5">📰 Library</h2>
+      <ul class="list-unstyled mb-2">
+        {% for article in latest_articles %}
+          <li class="mb-1"><a href="{{ article.source_url }}" target="_blank" rel="noopener">{{ article.title }}</a> <span class="text-muted small">· {{ article.source_name }}</span></li>
+        {% empty %}
+          <li class="text-muted">No articles yet.</li>
+        {% endfor %}
+      </ul>
+      <a href="{% url 'library:list' %}" class="btn btn-sm btn-outline-primary align-self-start">Browse library</a>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card kp-card p-3">
+      <h2 class="h5">📅 Upcoming exams</h2>
+      <ul class="list-unstyled mb-0">
+        {% for exam in upcoming_exams %}
+          <li>{{ exam.date }} — {{ exam.title }} ({{ exam.subject }})</li>
+        {% empty %}
+          <li class="text-muted">Nothing scheduled.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

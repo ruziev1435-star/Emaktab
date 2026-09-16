@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Book a meeting · Kundalik+{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Book a meeting</h1>
+<div class="row g-3">
+  {% for staff in staff_members %}
+  <div class="col-md-4">
+    <div class="card kp-card p-3 text-center">
+      <h2 class="h5">{{ staff.get_full_name|default:staff.username }}</h2>
+      <p class="text-muted">{{ staff.get_role_display }}</p>
+      <a href="{% url 'meetings:calendar' staff.id %}" class="btn btn-primary">View calendar</a>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-muted">No principal or counsellor accounts yet.</p>
+  {% endfor %}
+</div>
+<a href="{% url 'meetings:my_meetings' %}" class="btn btn-outline-secondary mt-4">My meetings</a>
+{% endblock %}
