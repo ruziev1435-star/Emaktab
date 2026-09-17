@@ -12,12 +12,12 @@
       <form method="post">
         {% csrf_token %}
         <div class="mb-3">
-          <label class="form-label">Username</label>
-          <input type="text" name="username" class="form-control" autofocus required>
+          <label class="form-label" for="id_username">Username</label>
+          <input type="text" name="username" id="id_username" class="form-control" autofocus required>
         </div>
         <div class="mb-3">
-          <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-control" required>
+          <label class="form-label" for="id_password">Password</label>
+          <input type="password" name="password" id="id_password" class="form-control" required>
         </div>
         <button class="btn btn-primary w-100" type="submit">Log in</button>
       </form>

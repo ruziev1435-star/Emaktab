@@ -46,7 +46,11 @@
 /* Student dashboard — the demo centerpiece */
 
 .kp-greeting-eyebrow {
-  color: #7a8699;
+  /* #5c6879, not the lighter #7a8699 this started as: that one measured
+     3.3-3.7:1 against its backgrounds, under WCAG AA's 4.5:1 for normal
+     text. This shade clears 4.5:1+ against white, #eef1f7 and #fafbfd —
+     every background it or .kp-badge-soon is used on. */
+  color: #5c6879;
   font-size: 0.9rem;
   letter-spacing: 0.02em;
 }
@@ -125,7 +129,7 @@
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: #7a8699;
+  color: #5c6879;
   background: #eef1f7;
   border-radius: 999px;
   padding: 0.2rem 0.6rem;
