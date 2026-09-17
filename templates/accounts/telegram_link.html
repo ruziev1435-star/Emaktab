@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Telegram · Kundalik+{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <div class="kp-greeting-eyebrow">Telegram</div>
+  <h1 class="h3 mb-0">Connect your Telegram</h1>
+</div>
+
+<div class="kp-card p-4" style="max-width: 480px;">
+  {% if user.is_linked_to_telegram %}
+    <p class="mb-0">
+      <span class="badge bg-success">Connected</span>
+      You'll get meeting and attendance notifications in Telegram.
+    </p>
+  {% else %}
+    <p class="text-muted small mb-3">
+      Link your Telegram so you get meeting and attendance notifications there —
+      it's the fastest way to hear back from your school.
+    </p>
+    <a href="{{ deep_link }}" target="_blank" rel="noopener" class="btn btn-primary w-100 mb-3">
+      Open Telegram to link
+    </a>
+    <p class="text-muted small mb-1">Or open the bot yourself and send:</p>
+    <code>/link {{ user.telegram_link_code }}</code>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import render
@@ -114,3 +115,14 @@ def staff_dashboard(request):
 
 def _render_dashboard(request, template_name, extra_context):
     return render(request, template_name, extra_context)
+
+
+@login_required
+def telegram_link(request):
+    user = request.user
+    deep_link = f"https://t.me/{settings.TELEGRAM_BOT_USERNAME}?start={user.telegram_link_code}"
+    return render(
+        request,
+        "accounts/telegram_link.html",
+        {"deep_link": deep_link},
+    )

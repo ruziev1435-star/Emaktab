@@ -70,12 +70,31 @@ to keep the base install light.
 
 ## Telegram bot
 
-`bot/notify.py` is the single choke point for outbound Telegram messages
-(`notify(recipient, message)`). It degrades gracefully: if `TELEGRAM_BOT_TOKEN`
-is unset or the send fails, it still records the attempt in
-`attendance.models.NotificationLog` so the notification fan-out is visible in
-the admin/demo without a live bot. Set `TELEGRAM_BOT_TOKEN` /
+**Outbound:** `bot/notify.py` is the single choke point for outbound
+Telegram messages (`notify(recipient, message)`). It degrades gracefully: if
+`TELEGRAM_BOT_TOKEN` is unset or the send fails, it still records the
+attempt in `attendance.models.NotificationLog` so the notification fan-out
+is visible in the admin/demo without a live bot. Set `TELEGRAM_BOT_TOKEN` /
 `TELEGRAM_BOT_USERNAME` in `.env` to enable real sends.
+
+**Inbound:** `bot/linking.py` (pure, sync, unit-tested — no bot/network
+involved) holds the account-linking logic; `bot/handlers.py` has the thin
+async python-telegram-bot `CommandHandler`s (`/start`, `/link`, `/whoami`)
+that call into it via `asgiref.sync_to_async`; `python manage.py runbot`
+starts the bot with **long polling** (not a webhook — that needs a public
+HTTPS endpoint this local/demo setup doesn't have; swap to a webhook only if
+this gets deployed behind one). A logged-in user's link code and one-tap
+deep link (`https://t.me/<bot>?start=<code>`) are shown at `/telegram/`
+(linked from every dashboard's navbar). `User`/`Parent.telegram_link_code`
+is auto-generated on save; `telegram_chat_id` is `unique=True` per model, so
+`link_chat_to_code()` explicitly checks *both* models before linking to stop
+one Telegram chat from silently stealing another account's notifications —
+don't bypass that check when adding new linking entry points.
+
+When testing linking logic in code, note that `TestCase` (transactional,
+single connection) and `sync_to_async` (runs on a different thread) deadlock
+against each other on SQLite — use `TransactionTestCase` for anything that
+exercises an async handler, as `bot/tests.py` does.
 
 ## Running locally
 

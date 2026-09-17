@@ -25,6 +25,9 @@
           {% endif %}
           <li class="nav-item"><a class="nav-link" href="{% url 'library:list' %}">Library</a></li>
         </ul>
+        <a href="{% url 'telegram_link' %}" class="btn btn-sm {% if user.is_linked_to_telegram %}btn-outline-success{% else %}btn-outline-light{% endif %} me-3">
+          {% if user.is_linked_to_telegram %}✅ Telegram{% else %}🔗 Connect Telegram{% endif %}
+        </a>
         <span class="navbar-text me-3">{{ user.get_full_name|default:user.username }} · {{ user.get_role_display }}</span>
         <form method="post" action="{% url 'logout' %}" class="d-inline">
           {% csrf_token %}
