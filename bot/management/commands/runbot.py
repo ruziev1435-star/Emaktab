@@ -1,8 +1,23 @@
+import asyncio
+
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from telegram.ext import Application, CommandHandler
 
 from bot.handlers import link, start, whoami
+
+
+def _ensure_event_loop():
+    """python-telegram-bot 21.x's Application.run_polling() calls the
+    deprecated asyncio.get_event_loop() internally, expecting it to
+    auto-create a loop when none exists for this thread. Python removed
+    that auto-creation (a RuntimeError instead, as of 3.14) — explicitly
+    creating and registering one here keeps run_polling() working without
+    patching the library itself."""
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
 
 
 class Command(BaseCommand):
@@ -22,6 +37,7 @@ class Command(BaseCommand):
                 "with a token from @BotFather, then re-run this command."
             )
 
+        _ensure_event_loop()
         application = Application.builder().token(token).build()
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CommandHandler("link", link))
