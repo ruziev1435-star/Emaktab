@@ -102,9 +102,13 @@ assumptions to still hold.
   `slots` list computed for that request. HTTP status alone (302) looks
   fine either way for a rejected attempt, so verifying this means
   checking the DB afterward, not just the response code.
-- `Meeting.topic` is `CharField(max_length=255)` but the view builds the
-  object via `.get_or_create()` with a raw `request.POST.get("topic")`,
-  never calling `full_clean()` — a 5000-char topic saves silently on
-  SQLite (no length enforcement) but would likely raise a DB error on
-  Postgres (which does enforce varchar length), a portability trap given
-  `DATABASE_URL` is meant to support swapping to Postgres later.
+- ~~`Meeting.topic` (`max_length=255`) wasn't validated before
+  `.get_or_create()`~~ — **fixed 2026-09-17**: the view now checks
+  `len(topic) > Meeting._meta.get_field("topic").max_length` explicitly.
+  When re-testing a fix like this, don't build the crafted POST's
+  `start`/`end` from local `datetime.now()` — this container's system
+  clock is UTC, not the app's `TIME_ZONE`, and the slot-validity check
+  (see above) will reject a naive/mismatched timestamp for a different
+  reason than the one you're trying to test, giving a false pass/fail.
+  Pull the real slot value from the rendered page's slot-button
+  `onclick` attribute instead (it's server-computed and tz-correct).
