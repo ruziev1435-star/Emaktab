@@ -72,6 +72,13 @@ def calendar(request, staff_id):
             messages.error(request, "Please pick a valid time slot.")
             return redirect("meetings:calendar", staff_id=staff.id)
 
+        is_offered_slot = any(s["start"] == start_time and s["end"] == end_time for s in slots)
+        if not is_offered_slot:
+            messages.error(
+                request, "That's not a currently available slot. Please pick one from the list."
+            )
+            return redirect("meetings:calendar", staff_id=staff.id)
+
         meeting, created = Meeting.objects.get_or_create(
             staff=staff,
             start_time=start_time,
