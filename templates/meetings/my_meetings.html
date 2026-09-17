@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}My meetings · Kundalik+{% endblock %}
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-end flex-wrap gap-2">
+  <div>
+    <div class="kp-greeting-eyebrow">Meetings</div>
+    <h1 class="h3 mb-0">My meetings</h1>
+  </div>
+  {% if user.role == 'student' %}
+  <a href="{% url 'meetings:staff_list' %}" class="btn btn-primary btn-sm">Book a new meeting</a>
+  {% endif %}
+</div>
+
+<div class="kp-card p-4">
+  {% if meetings %}
+    {% for meeting in meetings %}
+    <div class="kp-list-row{% if meeting.start_time < now %} text-muted{% endif %}">
+      <div>
+        <div class="fw-semibold">
+          {% if user.role == 'student' %}
+            {{ meeting.staff.get_full_name|default:meeting.staff.username }}
+          {% else %}
+            {{ meeting.student.get_full_name|default:meeting.student.username }}
+          {% endif %}
+        </div>
+        <div class="small text-muted">
+          {{ meeting.start_time|date:"D d M, H:i" }}{% if meeting.topic %} · {{ meeting.topic }}{% endif %}
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-{% if meeting.status == 'confirmed' %}success{% elif meeting.status == 'pending' %}warning text-dark{% else %}secondary{% endif %}">
+          {{ meeting.get_status_display }}
+        </span>
+        {% if user.role != 'student' and meeting.status == 'pending' %}
+        <form method="post" action="{% url 'meetings:update_status' meeting.id 'confirmed' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'meetings:my_meetings' %}">
+          <button class="btn btn-sm btn-success" type="submit">Confirm</button>
+        </form>
+        <form method="post" action="{% url 'meetings:update_status' meeting.id 'cancelled' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'meetings:my_meetings' %}">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Decline</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted small mb-0">
+      {% if user.role == 'student' %}You haven't booked any meetings yet.{% else %}No meeting requests yet.{% endif %}
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

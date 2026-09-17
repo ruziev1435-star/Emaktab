@@ -94,10 +94,10 @@ def calendar(request, staff_id):
 @login_required
 def my_meetings(request):
     if request.user.role == User.Role.STUDENT:
-        meetings = Meeting.objects.filter(student=request.user)
+        meetings = Meeting.objects.filter(student=request.user).select_related("staff")
     else:
-        meetings = Meeting.objects.filter(staff=request.user)
-    return render(request, "meetings/my_meetings.html", {"meetings": meetings})
+        meetings = Meeting.objects.filter(staff=request.user).select_related("student")
+    return render(request, "meetings/my_meetings.html", {"meetings": meetings, "now": timezone.now()})
 
 
 @login_required

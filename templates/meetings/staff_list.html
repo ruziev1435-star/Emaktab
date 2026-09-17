@@ -1,19 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Book a meeting · Kundalik+{% endblock %}
 {% block content %}
-<h1 class="h3 mb-4">Book a meeting</h1>
+<div class="mb-4 d-flex justify-content-between align-items-end flex-wrap gap-2">
+  <div>
+    <div class="kp-greeting-eyebrow">Meetings</div>
+    <h1 class="h3 mb-0">Who would you like to meet?</h1>
+  </div>
+  <a href="{% url 'meetings:my_meetings' %}" class="btn btn-outline-secondary btn-sm">My meetings</a>
+</div>
+
 <div class="row g-3">
   {% for staff in staff_members %}
   <div class="col-md-4">
-    <div class="card kp-card p-3 text-center">
-      <h2 class="h5">{{ staff.get_full_name|default:staff.username }}</h2>
-      <p class="text-muted">{{ staff.get_role_display }}</p>
-      <a href="{% url 'meetings:calendar' staff.id %}" class="btn btn-primary">View calendar</a>
+    <div class="kp-card p-4 text-center h-100">
+      <h2 class="h5 mb-1">{{ staff.get_full_name|default:staff.username }}</h2>
+      <p class="text-muted small mb-3">{{ staff.get_role_display }}</p>
+      <a href="{% url 'meetings:calendar' staff.id %}" class="btn btn-primary btn-sm">View calendar</a>
     </div>
   </div>
   {% empty %}
-  <p class="text-muted">No principal or counsellor accounts yet.</p>
+  <div class="col-12">
+    <div class="kp-placeholder-card">
+      <div class="kp-placeholder-card__icon">🗓️</div>
+      <h2 class="h6 mb-1">No one to meet yet</h2>
+      <p class="text-muted mb-0 small">No principal or counsellor accounts have been set up yet.</p>
+    </div>
+  </div>
   {% endfor %}
 </div>
-<a href="{% url 'meetings:my_meetings' %}" class="btn btn-outline-secondary mt-4">My meetings</a>
 {% endblock %}

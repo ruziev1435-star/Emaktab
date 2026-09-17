@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 {% block title %}{{ staff }} · Meetings{% endblock %}
 {% block content %}
-<h1 class="h3 mb-1">Meet with {{ staff }}</h1>
-<p class="text-muted mb-4">{{ staff.get_role_display }} — pick a free slot below. You can also book this from the Telegram bot.</p>
+<div class="mb-4">
+  <div class="kp-greeting-eyebrow">{{ staff.get_role_display }}</div>
+  <h1 class="h3 mb-1">Meet with {{ staff.get_full_name|default:staff.username }}</h1>
+  <p class="text-muted small mb-0">Pick a free slot below — you can also book this from the Telegram bot.</p>
+</div>
 
 {% if user.role == 'student' %}
-<div class="card kp-card p-3 mb-4">
+<div class="kp-card p-4 mb-4">
   <form method="post" id="booking-form">
     {% csrf_token %}
     <input type="hidden" name="start" id="id_start">
@@ -17,21 +20,31 @@
 
     {% regroup slots by day as slot_days %}
     {% for day in slot_days %}
-      <h2 class="h6 mt-3">{{ day.grouper|date:"D, d M" }}</h2>
-      {% for slot in day.list %}
-        <button type="submit" class="btn btn-outline-primary btn-sm slot-btn"
-          onclick="document.getElementById('id_start').value='{{ slot.start.isoformat }}'; document.getElementById('id_end').value='{{ slot.end.isoformat }}';">
-          {{ slot.start|date:"H:i" }}
-        </button>
-      {% endfor %}
+      <h2 class="h6 mt-3 mb-2">{{ day.grouper|date:"D, d M" }}</h2>
+      <div class="d-flex flex-wrap">
+        {% for slot in day.list %}
+          <button type="submit" class="btn btn-outline-primary btn-sm slot-btn"
+            onclick="document.getElementById('id_start').value='{{ slot.start.isoformat }}'; document.getElementById('id_end').value='{{ slot.end.isoformat }}';">
+            {{ slot.start|date:"H:i" }}
+          </button>
+        {% endfor %}
+      </div>
     {% empty %}
-      <p class="text-muted">No open slots in the next two weeks — check back later.</p>
+      <div class="kp-placeholder-card mt-2">
+        <div class="kp-placeholder-card__icon">🗓️</div>
+        <h2 class="h6 mb-1">No open slots</h2>
+        <p class="text-muted mb-0 small">Nothing free in the next two weeks — check back later.</p>
+      </div>
     {% endfor %}
   </form>
 </div>
 {% else %}
-  <p class="text-muted">Only students can book a meeting here. See <a href="{% url 'meetings:my_meetings' %}">my meetings</a> to manage requests.</p>
+<div class="kp-card p-4 mb-4">
+  <p class="text-muted mb-0">
+    Only students can book a meeting here. See <a href="{% url 'meetings:my_meetings' %}">my meetings</a> to manage requests.
+  </p>
+</div>
 {% endif %}
 
-<a href="{% url 'meetings:staff_list' %}" class="btn btn-outline-secondary">Back</a>
+<a href="{% url 'meetings:staff_list' %}" class="btn btn-outline-secondary btn-sm">← Back</a>
 {% endblock %}
