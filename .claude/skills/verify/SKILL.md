@@ -71,13 +71,14 @@ assumptions to still hold.
 - Forms often have >1 `csrfmiddlewaretoken` hidden input on the same page
   (navbar logout form + page's own form), so
   `page.locator('input[name="csrfmiddlewaretoken"]')` needs `.first`.
-- `meetings._open_slots_for` builds slot datetimes with
-  `tzinfo=timezone.now().tzinfo`, which is UTC (Django's `timezone.now()`
-  is always UTC-aware) — not the project's `TIME_ZONE` (Asia/Tashkent).
-  A `StaffAvailability` window entered as e.g. 09:00-10:00 is actually
-  offered/booked 5 hours later in local-time terms. Confirmed via a
-  booked `Meeting.start_time` landing at the "wrong" UTC hour relative to
-  the configured window. Not yet fixed as of 2026-09-17.
+- ~~`meetings._open_slots_for` built slot datetimes with
+  `tzinfo=timezone.now().tzinfo` (UTC) instead of the project's local
+  `TIME_ZONE`~~ — **fixed 2026-09-17**: now uses `timezone.make_aware()`
+  and anchors day-iteration on `timezone.localtime(now).date()`. If a
+  future change reintroduces raw `datetime.combine(..., tzinfo=...)` in
+  this file, check it against a `StaffAvailability` window the same way:
+  seed a window, check the *displayed* slot times match the *configured*
+  hours, not just that slots appear.
 - Known-broken pages as of 2026-09-17 (missing templates, `TemplateDoesNotExist`,
   500s): `/attendance/confirm/`, `/attendance/status/`, `/quizzes/`,
   `/library/`. `/meetings/mine/` was in this list too but was fixed.
