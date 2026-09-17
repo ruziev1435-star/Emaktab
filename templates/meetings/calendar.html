@@ -15,7 +15,7 @@
     <input type="hidden" name="end" id="id_end">
     <div class="mb-3">
       <label class="form-label">What's it about? (optional)</label>
-      <input type="text" name="topic" class="form-control" placeholder="e.g. college application questions">
+      <input type="text" name="topic" class="form-control" maxlength="255" placeholder="e.g. college application questions">
     </div>
 
     {% regroup slots by day as slot_days %}

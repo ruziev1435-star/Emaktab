@@ -64,7 +64,7 @@ def calendar(request, staff_id):
     if request.method == "POST" and request.user.role == User.Role.STUDENT:
         start_iso = request.POST.get("start")
         end_iso = request.POST.get("end")
-        topic = request.POST.get("topic", "")
+        topic = request.POST.get("topic", "").strip()
         try:
             start_time = datetime.fromisoformat(start_iso)
             end_time = datetime.fromisoformat(end_iso)
@@ -76,6 +76,13 @@ def calendar(request, staff_id):
         if not is_offered_slot:
             messages.error(
                 request, "That's not a currently available slot. Please pick one from the list."
+            )
+            return redirect("meetings:calendar", staff_id=staff.id)
+
+        topic_max_length = Meeting._meta.get_field("topic").max_length
+        if len(topic) > topic_max_length:
+            messages.error(
+                request, f"Please keep the topic under {topic_max_length} characters."
             )
             return redirect("meetings:calendar", staff_id=staff.id)
 
@@ -119,7 +126,7 @@ def my_meetings(request):
 @login_required
 def update_status(request, meeting_id, new_status):
     meeting = get_object_or_404(Meeting, id=meeting_id, staff=request.user)
-    if new_status in dict(Meeting.Status.choices):
+    if new_status in dict(Meeting.Status.choices) and new_status != meeting.status:
         meeting.status = new_status
         meeting.save(update_fields=["status"])
         notify(
