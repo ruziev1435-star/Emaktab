@@ -15,8 +15,17 @@ from .models import Meeting, StaffAvailability
 
 def _open_slots_for(staff, days_ahead=14):
     """Expand StaffAvailability windows into concrete free slots for the next
-    `days_ahead` days, excluding ones already booked."""
+    `days_ahead` days, excluding ones already booked.
+
+    StaffAvailability.start_time/end_time are wall-clock local times (e.g. a
+    counsellor entering "9:00-12:00" means 9am-12pm in TIME_ZONE, not UTC), so
+    each combined datetime is localized with make_aware() rather than being
+    stamped with now.tzinfo (which is UTC, since timezone.now() is always
+    UTC-aware) — otherwise every slot silently lands TIME_ZONE's offset away
+    from the hours actually configured.
+    """
     now = timezone.now()
+    today = timezone.localtime(now).date()
     booked_starts = set(
         Meeting.objects.filter(staff=staff, status__in=["pending", "confirmed"]).values_list(
             "start_time", flat=True
@@ -25,10 +34,10 @@ def _open_slots_for(staff, days_ahead=14):
     windows = StaffAvailability.objects.filter(staff=staff)
     slots = []
     for offset in range(days_ahead):
-        day = (now + timedelta(days=offset)).date()
+        day = today + timedelta(days=offset)
         for window in windows.filter(weekday=day.weekday()):
-            slot_start = datetime.combine(day, window.start_time, tzinfo=now.tzinfo)
-            slot_end_bound = datetime.combine(day, window.end_time, tzinfo=now.tzinfo)
+            slot_start = timezone.make_aware(datetime.combine(day, window.start_time))
+            slot_end_bound = timezone.make_aware(datetime.combine(day, window.end_time))
             step = timedelta(minutes=window.slot_minutes)
             current = slot_start
             while current + step <= slot_end_bound:
