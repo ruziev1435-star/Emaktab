@@ -96,12 +96,12 @@ assumptions to still hold.
   function rather than eyeballing screenshots — several `kp-*` tokens
   (`#7a8699` on white/near-white) sit around 3.3-3.7:1, under the 4.5:1
   AA threshold for normal text.
-- The booking view never validates a submitted `start`/`end` against the
-  staff's actual `StaffAvailability` windows — only a uniqueness
-  constraint on (staff, start_time) prevents double-booking. A crafted
-  POST can book literally any timestamp. Confirmed via `page.request.post`
-  with an off-hours time, then checking the DB — HTTP status alone (302)
-  looks fine, so check what actually got saved.
+- ~~The booking view never validated a submitted `start`/`end` against
+  the staff's actual `StaffAvailability` windows~~ — **fixed 2026-09-17**:
+  the POST handler now checks the submitted (start, end) against the
+  `slots` list computed for that request. HTTP status alone (302) looks
+  fine either way for a rejected attempt, so verifying this means
+  checking the DB afterward, not just the response code.
 - `Meeting.topic` is `CharField(max_length=255)` but the view builds the
   object via `.get_or_create()` with a raw `request.POST.get("topic")`,
   never calling `full_clean()` — a 5000-char topic saves silently on
