@@ -82,9 +82,13 @@ assumptions to still hold.
 - Known-broken pages as of 2026-09-17 (missing templates, `TemplateDoesNotExist`,
   500s): `/attendance/confirm/`, `/attendance/status/`, `/quizzes/`,
   `/library/`. `/meetings/mine/` was in this list too but was fixed.
-- `login.html`'s `<label>`s aren't linked to their inputs via `for`/`id`
-  (no `id` on the `<input>` elements at all) — a real accessibility gap,
-  not yet fixed.
+- ~~`login.html`'s and `calendar.html`'s `<label>`s weren't linked to
+  their inputs via `for`/`id`~~ — **fixed 2026-09-17**: added
+  `id="id_username"`/`"id_password"`/`"id_topic"` plus matching `for=`.
+  When re-checking a fix like this, don't just assert the `for`
+  attribute is present — click the label and confirm
+  `document.activeElement` is actually the input; that's what the
+  attribute is supposed to accomplish.
 
 ## Useful checks beyond the obvious click-through
 
@@ -93,9 +97,13 @@ assumptions to still hold.
   recent verify pass's script for the exact JS snippet.
 - Contrast: compute WCAG ratios for custom CSS colors in
   `static/css/kundalikplus.css` with a plain Python luminance/contrast
-  function rather than eyeballing screenshots — several `kp-*` tokens
-  (`#7a8699` on white/near-white) sit around 3.3-3.7:1, under the 4.5:1
-  AA threshold for normal text.
+  function rather than eyeballing screenshots. ~~Several `kp-*` tokens
+  (`#7a8699` on white/near-white) sat around 3.3-3.7:1~~ — **fixed
+  2026-09-17**: `.kp-greeting-eyebrow`/`.kp-badge-soon` now use
+  `#5c6879`, which clears 4.5:1+ against every background they're used
+  on (white, `#eef1f7`, `#fafbfd` — check the worst case, not just one).
+  If a future color token gets added, run it through the same
+  luminance/contrast function before shipping it.
 - ~~The booking view never validated a submitted `start`/`end` against
   the staff's actual `StaffAvailability` windows~~ — **fixed 2026-09-17**:
   the POST handler now checks the submitted (start, end) against the
