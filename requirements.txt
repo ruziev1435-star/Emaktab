@@ -1,5 +1,5 @@
 # Core
-Django==5.0.14
+Django==5.2.17               # 5.2 LTS: the earliest series with official Python 3.14 support (5.0/5.1 aren't)
 dj-database-url==3.1.2      # DATABASE_URL parsing; swap SQLite for Postgres/MySQL later
 python-dotenv==1.2.3        # loads .env for local secrets/config
 
