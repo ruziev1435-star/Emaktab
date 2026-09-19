@@ -82,9 +82,24 @@ assumptions to still hold.
 - ~~Known-broken pages as of 2026-09-17 (missing templates,
   `TemplateDoesNotExist`, 500s): `/attendance/confirm/`,
   `/attendance/status/`~~ — **fixed 2026-09-19**: templates added, task #7
-  (attendance confirmation). Still broken: `/quizzes/`, `/library/`
-  (task #8/#9, not built yet). `/meetings/mine/` was in this list too but
-  was fixed earlier.
+  (attendance confirmation). ~~`/quizzes/`~~ — **fixed 2026-09-19**:
+  templates added, task #8. Still broken: `/library/` (task #9, not built
+  yet). `/meetings/mine/` was in this list too but was fixed earlier.
+- `quizzes.views.take_quiz` had two real bugs, both caught by driving the
+  actual view (not just eyeballing the code): (1) no uniqueness
+  constraint on `QuizAttempt` and no check-before-create in the view, so
+  resubmitting the same quiz created additional `QuizAttempt` rows
+  indefinitely instead of being rejected — fixed with a
+  `UniqueConstraint(fields=["quiz", "student"])` plus an explicit
+  `already` check in the view (same `transaction.atomic()` +
+  `IntegrityError`-catch pattern as `attendance.services`, for the same
+  reason: an uncaught `IntegrityError` inside a wider transaction breaks
+  it, see below). (2) an answer's `question_<id>` POST value went
+  straight into `Choice.objects.filter(id=selected_id, ...)` — a crafted
+  non-numeric value there raises `ValueError`, not a caught validation
+  error; reproduce with `client.post(url, {f"question_{q.id}": "not-a-number"})`
+  before assuming a numeric-looking form field is safe to filter on
+  directly.
 - A helper called from an async bot handler that touches the ORM *eagerly*
   (not just returns a lazy `QuerySet`) must itself be wrapped in
   `sync_to_async` — wrapping only what you do with its return value isn't

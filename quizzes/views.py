@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .models import Quiz, QuizAttempt
@@ -20,21 +21,36 @@ def quiz_list(request):
 @login_required
 def take_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
+    already = QuizAttempt.objects.filter(quiz=quiz, student=request.user).first()
 
     if request.method == "POST":
+        if already:
+            messages.info(request, f"You already took {quiz.topic}.")
+            return redirect("quizzes:list")
+
         score = 0
         questions = list(quiz.questions.all())
         for question in questions:
             selected_id = request.POST.get(f"question_{question.id}")
-            if selected_id and question.choices.filter(id=selected_id, is_correct=True).exists():
-                score += 1
-        QuizAttempt.objects.create(
-            quiz=quiz, student=request.user, score=score, total=len(questions)
-        )
+            # selected_id is untrusted POST data — a non-numeric value would
+            # otherwise crash the id__exact lookup with ValueError instead
+            # of just counting as an unanswered/wrong question.
+            if selected_id and str(selected_id).isdigit():
+                if question.choices.filter(id=selected_id, is_correct=True).exists():
+                    score += 1
+
+        try:
+            with transaction.atomic():
+                QuizAttempt.objects.create(
+                    quiz=quiz, student=request.user, score=score, total=len(questions)
+                )
+        except IntegrityError:
+            messages.info(request, f"You already took {quiz.topic}.")
+            return redirect("quizzes:list")
+
         messages.success(request, f"You scored {score}/{len(questions)} on {quiz.topic}.")
         return redirect("quizzes:list")
 
-    already = QuizAttempt.objects.filter(quiz=quiz, student=request.user).first()
     return render(
         request, "quizzes/take_quiz.html", {"quiz": quiz, "already": already}
     )

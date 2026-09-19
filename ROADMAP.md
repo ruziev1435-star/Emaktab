@@ -53,11 +53,22 @@ for Postgres later), **Bootstrap 5** templates with no build step, and
    `CallbackQueryHandler` for the button tap and restrict to student
    accounts (`limit_choices_to` alone doesn't enforce that at the ORM
    level). Step 2 is repeatable per subject per day; step 1 is once/day.
+   Both steps are self-report (honor system) — see "Future ideas" below
+   for stronger verification options considered and deliberately not
+   built yet.
+8. **Subject unit tests (quizzes)** — a student picks an unstarted unit
+   test from `/quizzes/`, answers multiple-choice questions, and gets an
+   immediate score; results are listed at `/quizzes/results/`. One
+   attempt per quiz (`QuizAttempt` has a `UniqueConstraint` on
+   `(quiz, student)`, enforced at both the DB and view level — the
+   original view had neither, so a student could resubmit indefinitely).
+   Answer values from POST are validated as numeric before being used in
+   an `id` lookup — an unvalidated value there raises an unhandled
+   `ValueError` (confirmed before fixing, via a crafted non-numeric
+   `question_<id>` field).
 
 ### Pending
 
-8. **Subject unit tests (quizzes)** — short tests delivered after a topic
-   is studied. (Models exist in `quizzes/`; templates are missing.)
 9. **Library / news aggregation** — aggregated (not authored) articles on
    Uzbek current events, teen mental health, and the digital world.
    (Models exist in `library/`; templates are missing.)
@@ -72,3 +83,19 @@ for Postgres later), **Bootstrap 5** templates with no build step, and
 The gamification/virtual-currency system (earning currency for discipline,
 grades, olympiad wins; redeemable for absence days or exam-fee coverage) —
 a future roadmap item for the pitch, not a core feature to build now.
+
+### Future ideas (discussed, not built — revisit when asked)
+
+Stronger anti-fraud verification for attendance (task 7), raised while
+discussing that both steps are currently pure self-report:
+- **Camera/detection-based verification** (face recognition, per-classroom
+  cameras) — the "correct" long-term answer but a much bigger, separate
+  undertaking: hardware installation, a computer-vision pipeline, and
+  real legal/privacy exposure (biometric data on minors is regulated in
+  most jurisdictions). Not a Django+Telegram change.
+- **Teacher-displayed rotating code/QR** — a lighter middle ground: the
+  teacher's dashboard shows a short code for their current class: the
+  student enters it in `/lesson` instead of just picking the subject from
+  a list. Still just Django+Telegram, no hardware, proves presence at the
+  moment the code was shown (not full physical verification, but strictly
+  more than what step 2 checks today).

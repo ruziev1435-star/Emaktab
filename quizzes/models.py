@@ -57,6 +57,9 @@ class QuizAttempt(models.Model):
 
     class Meta:
         ordering = ["-submitted_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["quiz", "student"], name="one_attempt_per_quiz")
+        ]
 
     def __str__(self):
         return f"{self.student} - {self.quiz} ({self.score}/{self.total})"

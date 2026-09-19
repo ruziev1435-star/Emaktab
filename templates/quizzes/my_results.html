@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}My results · Kundalik+{% endblock %}
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-end flex-wrap gap-2">
+  <div>
+    <div class="kp-greeting-eyebrow">Unit tests</div>
+    <h1 class="h3 mb-0">My results</h1>
+  </div>
+  <a href="{% url 'quizzes:list' %}" class="btn btn-primary btn-sm">Take a unit test</a>
+</div>
+
+<div class="kp-card p-4">
+  {% if attempts %}
+    {% for attempt in attempts %}
+    <div class="kp-list-row">
+      <div>
+        <div class="fw-semibold">{{ attempt.quiz.topic }}</div>
+        <div class="small text-muted">{{ attempt.quiz.subject }} · {{ attempt.submitted_at|date:"D d M, H:i" }}</div>
+      </div>
+      <span class="badge bg-{% if attempt.total and attempt.score == attempt.total %}success{% else %}secondary{% endif %}">
+        {{ attempt.score }}/{{ attempt.total }}
+      </span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted small mb-0">You haven't taken any unit tests yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

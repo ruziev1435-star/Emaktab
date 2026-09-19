@@ -32,7 +32,7 @@ structure to this project's actual folders:
 | Routes | `kundalikplus/urls.py` is the root router; it `include()`s each app's own `urls.py` (e.g. `meetings/urls.py`, `attendance/urls.py`) under an app namespace |
 | Meetings / calendar booking | `meetings/` — `StaffAvailability`, `Meeting` |
 | Attendance confirmation | `attendance/` — `AttendanceRecord` (building entry), `SubjectAttendanceRecord` (per-subject check-in), `NotificationLog`, `services.py` (the two-step notify fan-out) |
-| Unit tests & exam schedule | `quizzes/` — `Quiz`/`Question`/`Choice`/`QuizAttempt`, `Exam` |
+| Unit tests & exam schedule | `quizzes/` — `Quiz`/`Question`/`Choice`/`QuizAttempt` (one attempt per quiz per student, DB-enforced), `Exam` (not surfaced yet — task 10) |
 | Library / news aggregation | `library/` — `Article` (aggregated, not authored, content) |
 | Telegram bot | `bot/` — `notify.py` (outbound sender used by other apps); bot command handlers (`/start`, meeting booking, attendance button) live here too |
 | Settings & root config | `kundalikplus/` — `settings.py`, `urls.py`, `wsgi.py`/`asgi.py` |
@@ -155,12 +155,20 @@ python manage.py runserver
 
 - Function-based views throughout (keep it simple for a small MVP team).
 - No `routes/` or `models/` top-level folders — see the table above instead.
-- `attendance/tests.py` and `bot/tests.py` have real coverage (service
-  fan-out, views, bot handlers via fake `Update`/`Context` objects — see
-  the async gotcha above for why handler tests run the real function
-  rather than mocking it). Other apps still have the empty `tests.py`
-  stub from `startapp` (unused so far) — follow the attendance/bot
-  pattern when a new feature needs one, not the empty stub.
+- `attendance/tests.py`, `bot/tests.py`, and `quizzes/tests.py` have real
+  coverage (service fan-out, views, bot handlers via fake `Update`/`Context`
+  objects — see the async gotcha above for why handler tests run the real
+  function rather than mocking it). Other apps still have the empty
+  `tests.py` stub from `startapp` (unused so far) — follow the
+  attendance/bot/quizzes pattern when a new feature needs one, not the
+  empty stub.
+- A crafted-POST edge case worth remembering: `quizzes.views.take_quiz`
+  used a submitted answer id directly in `Choice.objects.filter(id=...)`
+  — a non-numeric value there raises an unhandled `ValueError` (confirmed
+  live before fixing), not a caught validation error. Any view that puts
+  raw POST data into an `id`/`pk` lookup needs the same numeric check
+  (`str(value).isdigit()`) `take_quiz` now has, or the crafted-input test
+  that caught it (`quizzes/tests.py::test_post_with_tampered_non_numeric_choice_id_does_not_crash`).
 - Out of scope for the MVP (mention only if asked; don't build): the
   gamification / virtual-currency system (earning currency for discipline,
   grades, olympiad wins; redeemable for absence days or exam-fee coverage).

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.topic }} · Kundalik+{% endblock %}
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-end flex-wrap gap-2">
+  <div>
+    <div class="kp-greeting-eyebrow">Unit test · {{ quiz.subject }}</div>
+    <h1 class="h3 mb-0">{{ quiz.topic }}</h1>
+  </div>
+  <a href="{% url 'quizzes:list' %}" class="btn btn-outline-secondary btn-sm">Back to unit tests</a>
+</div>
+
+{% if already %}
+<div class="kp-card p-4" style="max-width: 480px;">
+  <p class="mb-0">
+    <span class="badge bg-success">Taken</span>
+    You already took this unit test and scored
+    <strong>{{ already.score }}/{{ already.total }}</strong>.
+  </p>
+</div>
+{% else %}
+<form method="post" action="{% url 'quizzes:take' quiz.id %}">
+  {% csrf_token %}
+  {% for question in quiz.questions.all %}
+  <fieldset class="kp-card p-4 mb-3">
+    <legend class="h6 mb-3">{{ forloop.counter }}. {{ question.text }}</legend>
+    {% for choice in question.choices.all %}
+    <div class="form-check mb-2">
+      <input
+        class="form-check-input"
+        type="radio"
+        name="question_{{ question.id }}"
+        id="q{{ question.id }}_c{{ choice.id }}"
+        value="{{ choice.id }}"
+      >
+      <label class="form-check-label" for="q{{ question.id }}_c{{ choice.id }}">{{ choice.text }}</label>
+    </div>
+    {% endfor %}
+  </fieldset>
+  {% endfor %}
+  <button type="submit" class="btn btn-primary btn-lg w-100">Submit answers</button>
+</form>
+{% endif %}
+{% endblock %}
