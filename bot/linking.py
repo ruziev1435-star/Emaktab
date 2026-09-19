@@ -54,6 +54,13 @@ def link_chat_to_code(code, chat_id):
     return True, f"You're linked! ✅ This chat is now connected as {account}."
 
 
+def find_student_by_chat_id(chat_id):
+    """Return the linked *student* User for this chat, or None if the chat
+    isn't linked, or is linked to a non-student (teacher/staff/parent)
+    account — only students have attendance to confirm."""
+    return User.objects.filter(telegram_chat_id=str(chat_id), role=User.Role.STUDENT).first()
+
+
 def describe_linked_account(chat_id):
     chat_id = str(chat_id)
     for model in _MODELS:

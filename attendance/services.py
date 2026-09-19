@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.utils import timezone
 
 from bot.notify import notify
@@ -8,10 +9,14 @@ from .models import AttendanceRecord
 def confirm_student_attendance(student, via="telegram"):
     """Core attendance flow: record the confirmation, then notify the
     homeroom (head) teacher, that day's subject teachers, and parents.
-    Raises django.db.IntegrityError if already confirmed today."""
-    record = AttendanceRecord.objects.create(
-        student=student, date=timezone.localdate(), confirmed_via=via
-    )
+    Raises django.db.IntegrityError if already confirmed today — the
+    duplicate .create() is wrapped in its own atomic() so that error only
+    rolls back this savepoint, not any wider transaction a caller (a test,
+    an admin action, ATOMIC_REQUESTS) might already be running inside."""
+    with transaction.atomic():
+        record = AttendanceRecord.objects.create(
+            student=student, date=timezone.localdate(), confirmed_via=via
+        )
 
     profile = getattr(student, "student_profile", None)
     school_class = getattr(profile, "school_class", None)

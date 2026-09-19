@@ -5,9 +5,10 @@ from unittest.mock import AsyncMock
 from django.test import TestCase, TransactionTestCase
 
 from accounts.models import Parent, User
+from attendance.models import AttendanceRecord
 
 from . import handlers
-from .linking import describe_linked_account, link_chat_to_code
+from .linking import describe_linked_account, find_student_by_chat_id, link_chat_to_code
 
 
 class LinkChatToCodeTests(TestCase):
@@ -121,6 +122,19 @@ def _make_update(text, chat_id=555):
     return update, context
 
 
+def _make_callback_update(chat_id=555):
+    """A minimal fake telegram.Update for a CallbackQueryHandler: only
+    update.callback_query.{answer,edit_message_text,message.chat_id} are
+    touched by attendance_confirm()."""
+    message = SimpleNamespace(chat_id=chat_id)
+    callback_query = SimpleNamespace(
+        answer=AsyncMock(), edit_message_text=AsyncMock(), message=message
+    )
+    update = SimpleNamespace(callback_query=callback_query)
+    context = SimpleNamespace(args=[])
+    return update, context
+
+
 class HandlerTests(TransactionTestCase):
     """Exercise the actual async handlers with a fake Update/Context —
     no network, no real Telegram server — to prove the bot's replies are
@@ -179,3 +193,95 @@ class HandlerTests(TransactionTestCase):
         asyncio.run(handlers.whoami(update2, context2))
         (text2,), _ = update2.message.reply_text.call_args
         self.assertIn("Dilnoza", text2)
+
+
+class FindStudentByChatIdTests(TestCase):
+    def setUp(self):
+        self.student = User.objects.create_user(
+            username="dilnoza", password="x", role=User.Role.STUDENT
+        )
+        self.teacher = User.objects.create_user(
+            username="cara", password="x", role=User.Role.TEACHER
+        )
+
+    def test_unlinked_chat_returns_none(self):
+        self.assertIsNone(find_student_by_chat_id("111"))
+
+    def test_linked_student_is_found(self):
+        self.student.telegram_chat_id = "111"
+        self.student.save(update_fields=["telegram_chat_id"])
+        self.assertEqual(find_student_by_chat_id("111"), self.student)
+
+    def test_linked_non_student_is_not_returned(self):
+        self.teacher.telegram_chat_id = "222"
+        self.teacher.save(update_fields=["telegram_chat_id"])
+        self.assertIsNone(find_student_by_chat_id("222"))
+
+
+class AttendanceHandlerTests(TransactionTestCase):
+    """/attendance and its inline-button callback, via fake Update/Context —
+    same rationale as HandlerTests above for using TransactionTestCase."""
+
+    def setUp(self):
+        self.student = User.objects.create_user(
+            username="dilnoza", password="x", role=User.Role.STUDENT, first_name="Dilnoza"
+        )
+        self.teacher = User.objects.create_user(
+            username="cara", password="x", role=User.Role.TEACHER, first_name="Cara"
+        )
+
+    def test_attendance_command_unlinked_chat_does_not_crash(self):
+        update, context = _make_update("/attendance", chat_id=1001)
+        asyncio.run(handlers.attendance(update, context))
+        update.message.reply_text.assert_awaited_once()
+        (text,), kwargs = update.message.reply_text.call_args
+        self.assertIn("isn't linked", text)
+        self.assertNotIn("reply_markup", kwargs)
+
+    def test_attendance_command_linked_non_student_chat_is_declined(self):
+        self.teacher.telegram_chat_id = "1002"
+        self.teacher.save(update_fields=["telegram_chat_id"])
+        update, context = _make_update("/attendance", chat_id=1002)
+        asyncio.run(handlers.attendance(update, context))
+        (text,), _ = update.message.reply_text.call_args
+        self.assertIn("isn't linked", text)
+
+    def test_attendance_command_linked_student_gets_button(self):
+        self.student.telegram_chat_id = "1003"
+        self.student.save(update_fields=["telegram_chat_id"])
+        update, context = _make_update("/attendance", chat_id=1003)
+        asyncio.run(handlers.attendance(update, context))
+        _args, kwargs = update.message.reply_text.call_args
+        self.assertIn("reply_markup", kwargs)
+        button = kwargs["reply_markup"].inline_keyboard[0][0]
+        self.assertEqual(button.callback_data, handlers.ATTENDANCE_CONFIRM_CALLBACK)
+
+    def test_confirm_button_creates_record_and_edits_message(self):
+        self.student.telegram_chat_id = "1004"
+        self.student.save(update_fields=["telegram_chat_id"])
+        update, context = _make_callback_update(chat_id="1004")
+        asyncio.run(handlers.attendance_confirm(update, context))
+        update.callback_query.answer.assert_awaited_once()
+        update.callback_query.edit_message_text.assert_awaited_once()
+        (text,), _ = update.callback_query.edit_message_text.call_args
+        self.assertIn("confirmed", text.lower())
+        self.assertEqual(AttendanceRecord.objects.filter(student=self.student).count(), 1)
+
+    def test_confirm_button_tapped_twice_does_not_crash(self):
+        self.student.telegram_chat_id = "1005"
+        self.student.save(update_fields=["telegram_chat_id"])
+        update1, context1 = _make_callback_update(chat_id="1005")
+        asyncio.run(handlers.attendance_confirm(update1, context1))
+
+        update2, context2 = _make_callback_update(chat_id="1005")
+        asyncio.run(handlers.attendance_confirm(update2, context2))
+        (text,), _ = update2.callback_query.edit_message_text.call_args
+        self.assertIn("already confirmed", text.lower())
+        self.assertEqual(AttendanceRecord.objects.filter(student=self.student).count(), 1)
+
+    def test_confirm_button_from_unlinked_chat_does_not_crash(self):
+        update, context = _make_callback_update(chat_id="9999")
+        asyncio.run(handlers.attendance_confirm(update, context))
+        (text,), _ = update.callback_query.edit_message_text.call_args
+        self.assertIn("isn't linked", text)
+        self.assertEqual(AttendanceRecord.objects.count(), 0)

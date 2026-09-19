@@ -79,9 +79,36 @@ assumptions to still hold.
   this file, check it against a `StaffAvailability` window the same way:
   seed a window, check the *displayed* slot times match the *configured*
   hours, not just that slots appear.
-- Known-broken pages as of 2026-09-17 (missing templates, `TemplateDoesNotExist`,
-  500s): `/attendance/confirm/`, `/attendance/status/`, `/quizzes/`,
-  `/library/`. `/meetings/mine/` was in this list too but was fixed.
+- ~~Known-broken pages as of 2026-09-17 (missing templates,
+  `TemplateDoesNotExist`, 500s): `/attendance/confirm/`,
+  `/attendance/status/`~~ — **fixed 2026-09-19**: templates added, task #7
+  (attendance confirmation). Still broken: `/quizzes/`, `/library/`
+  (task #8/#9, not built yet). `/meetings/mine/` was in this list too but
+  was fixed earlier.
+- Catching `IntegrityError` around a bare `.create()` (e.g.
+  `attendance.services.confirm_student_attendance`'s duplicate-per-day
+  guard) leaves the *enclosing* transaction broken if there is one — the
+  next query raises `TransactionManagementError`, not just re-raises the
+  IntegrityError. Doesn't show up hitting the view directly (no
+  `ATOMIC_REQUESTS`), but bites immediately under `TestCase` (each test
+  runs inside one outer atomic block) and would bite in production too if
+  this ever runs inside another `atomic()` (an admin action, a future API
+  wrapped in one). Fix: wrap the risky `.create()` in its own
+  `transaction.atomic()` so it gets a savepoint. When adding a new
+  "create-or-catch-IntegrityError" flow anywhere in this codebase, wrap it
+  the same way and prove it with a test that does the same operation
+  twice inside a `TestCase` (a plain manual/curl re-check won't surface
+  this — it only shows up transaction-wrapped).
+- `AttendanceRecord.student`'s `limit_choices_to={"role": "student"}` is
+  admin/form-UI only — it does **not** stop `.create()` from taking a
+  non-student user. `attendance.views.confirm_web` now checks
+  `request.user.role` itself before calling the service (mirrors
+  `bot.linking.find_student_by_chat_id`, which the Telegram `/attendance`
+  command already used for the same reason). If a new attendance entry
+  point gets added, don't rely on `limit_choices_to` alone — add the same
+  explicit role check, and test it by logging in as a non-student role
+  and confirming no record gets created (not just that the response
+  redirects — a 302 looks the same whether it succeeded or was declined).
 - ~~`login.html`'s and `calendar.html`'s `<label>`s weren't linked to
   their inputs via `for`/`id`~~ — **fixed 2026-09-17**: added
   `id="id_username"`/`"id_password"`/`"id_topic"` plus matching `for=`.

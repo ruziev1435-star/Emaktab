@@ -44,14 +44,16 @@ for Postgres later), **Bootstrap 5** templates with no build step, and
    connects their Telegram via a link code or one-tap deep link), confirmed
    the bot responds (`/start`, `/link`, `/whoami`), running via long
    polling. The plumbing other bot features build on.
+7. **Attendance confirmation** — a manual Telegram button a student taps to
+   confirm they're in the building, notifying the homeroom teacher, that
+   day's subject teachers, and parents. `/attendance` sends the button (a
+   `CallbackQueryHandler` handles the tap); a web fallback at
+   `/attendance/confirm/` covers the no-live-bot demo case. Both paths
+   restrict to student accounts (`limit_choices_to` alone doesn't enforce
+   that at the ORM level).
 
 ### Pending
 
-7. **Attendance confirmation** — a manual Telegram button a student taps to
-   confirm they're in the building, notifying the homeroom teacher, that
-   day's subject teachers, and parents. (Models and the notification
-   fan-out logic already exist in `attendance/`; the confirm page's
-   template is what's missing, plus wiring the Telegram button itself.)
 8. **Subject unit tests (quizzes)** — short tests delivered after a topic
    is studied. (Models exist in `quizzes/`; templates are missing.)
 9. **Library / news aggregation** — aggregated (not authored) articles on

@@ -2,9 +2,9 @@ import asyncio
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from telegram.ext import Application, CommandHandler
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler
 
-from bot.handlers import link, start, whoami
+from bot.handlers import ATTENDANCE_CONFIRM_CALLBACK, attendance, attendance_confirm, link, start, whoami
 
 
 def _ensure_event_loop():
@@ -42,6 +42,10 @@ class Command(BaseCommand):
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CommandHandler("link", link))
         application.add_handler(CommandHandler("whoami", whoami))
+        application.add_handler(CommandHandler("attendance", attendance))
+        application.add_handler(
+            CallbackQueryHandler(attendance_confirm, pattern=f"^{ATTENDANCE_CONFIRM_CALLBACK}$")
+        )
 
         self.stdout.write(self.style.SUCCESS("Kundalik+ bot starting (long polling)... Ctrl+C to stop."))
         application.run_polling()
