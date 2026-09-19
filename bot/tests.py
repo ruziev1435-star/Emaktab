@@ -4,8 +4,9 @@ from unittest.mock import AsyncMock
 
 from django.test import TestCase, TransactionTestCase
 
-from accounts.models import Parent, User
-from attendance.models import AttendanceRecord
+from accounts.models import Parent, StudentProfile, User
+from attendance.models import AttendanceRecord, SubjectAttendanceRecord
+from core.models import ClassSubjectTeacher, SchoolClass, Subject
 
 from . import handlers
 from .linking import describe_linked_account, find_student_by_chat_id, link_chat_to_code
@@ -122,13 +123,13 @@ def _make_update(text, chat_id=555):
     return update, context
 
 
-def _make_callback_update(chat_id=555):
-    """A minimal fake telegram.Update for a CallbackQueryHandler: only
-    update.callback_query.{answer,edit_message_text,message.chat_id} are
-    touched by attendance_confirm()."""
+def _make_callback_update(chat_id=555, data=None):
+    """A minimal fake telegram.Update for a CallbackQueryHandler:
+    update.callback_query.{answer,edit_message_text,message.chat_id,data}.
+    attendance_confirm() ignores .data; lesson_confirm() reads it."""
     message = SimpleNamespace(chat_id=chat_id)
     callback_query = SimpleNamespace(
-        answer=AsyncMock(), edit_message_text=AsyncMock(), message=message
+        answer=AsyncMock(), edit_message_text=AsyncMock(), message=message, data=data
     )
     update = SimpleNamespace(callback_query=callback_query)
     context = SimpleNamespace(args=[])
@@ -284,4 +285,116 @@ class AttendanceHandlerTests(TransactionTestCase):
         asyncio.run(handlers.attendance_confirm(update, context))
         (text,), _ = update.callback_query.edit_message_text.call_args
         self.assertIn("isn't linked", text)
+
+
+class LessonHandlerTests(TransactionTestCase):
+    """/lesson and its per-subject inline-button callback."""
+
+    def setUp(self):
+        self.homeroom_teacher = User.objects.create_user(
+            username="homeroom", password="x", role=User.Role.TEACHER, first_name="Homeroom"
+        )
+        self.math_teacher = User.objects.create_user(
+            username="mathteacher", password="x", role=User.Role.TEACHER, first_name="MathT"
+        )
+        self.school_class = SchoolClass.objects.create(
+            name="9-A", homeroom_teacher=self.homeroom_teacher
+        )
+        self.math = Subject.objects.create(name="Math")
+        ClassSubjectTeacher.objects.create(
+            school_class=self.school_class, subject=self.math, teacher=self.math_teacher
+        )
+        self.student = User.objects.create_user(
+            username="dilnoza", password="x", role=User.Role.STUDENT, first_name="Dilnoza"
+        )
+        StudentProfile.objects.create(user=self.student, school_class=self.school_class)
+
+    def test_lesson_command_unlinked_chat_does_not_crash(self):
+        update, context = _make_update("/lesson", chat_id=2001)
+        asyncio.run(handlers.lesson(update, context))
+        (text,), kwargs = update.message.reply_text.call_args
+        self.assertIn("isn't linked", text)
+        self.assertNotIn("reply_markup", kwargs)
+
+    def test_lesson_command_student_with_no_subjects_does_not_crash(self):
+        lonely = User.objects.create_user(username="lonely", password="x", role=User.Role.STUDENT)
+        lonely.telegram_chat_id = "2002"
+        lonely.save(update_fields=["telegram_chat_id"])
+        update, context = _make_update("/lesson", chat_id=2002)
+        asyncio.run(handlers.lesson(update, context))
+        (text,), kwargs = update.message.reply_text.call_args
+        self.assertIn("No subjects", text)
+        self.assertNotIn("reply_markup", kwargs)
+
+    def test_lesson_command_lists_subjects_as_buttons(self):
+        self.student.telegram_chat_id = "2003"
+        self.student.save(update_fields=["telegram_chat_id"])
+        update, context = _make_update("/lesson", chat_id=2003)
+        asyncio.run(handlers.lesson(update, context))
+        _args, kwargs = update.message.reply_text.call_args
+        buttons = kwargs["reply_markup"].inline_keyboard
+        self.assertEqual(len(buttons), 1)
+        self.assertIn("Math", buttons[0][0].text)
+        self.assertEqual(
+            buttons[0][0].callback_data, f"{handlers.LESSON_CONFIRM_CALLBACK_PREFIX}{self.math.id}"
+        )
+
+    def test_lesson_confirm_creates_record_and_notifies(self):
+        self.student.telegram_chat_id = "2004"
+        self.student.save(update_fields=["telegram_chat_id"])
+        update, context = _make_callback_update(
+            chat_id="2004", data=f"{handlers.LESSON_CONFIRM_CALLBACK_PREFIX}{self.math.id}"
+        )
+        asyncio.run(handlers.lesson_confirm(update, context))
+        update.callback_query.answer.assert_awaited_once()
+        (text,), _ = update.callback_query.edit_message_text.call_args
+        self.assertIn("Checked into", text)
+        self.assertEqual(
+            SubjectAttendanceRecord.objects.filter(student=self.student, subject=self.math).count(), 1
+        )
+
+    def test_lesson_confirm_tapped_twice_same_subject_does_not_crash(self):
+        self.student.telegram_chat_id = "2005"
+        self.student.save(update_fields=["telegram_chat_id"])
+        data = f"{handlers.LESSON_CONFIRM_CALLBACK_PREFIX}{self.math.id}"
+        update1, context1 = _make_callback_update(chat_id="2005", data=data)
+        asyncio.run(handlers.lesson_confirm(update1, context1))
+        update2, context2 = _make_callback_update(chat_id="2005", data=data)
+        asyncio.run(handlers.lesson_confirm(update2, context2))
+        (text,), _ = update2.callback_query.edit_message_text.call_args
+        self.assertIn("already checked into", text.lower())
+        self.assertEqual(
+            SubjectAttendanceRecord.objects.filter(student=self.student, subject=self.math).count(), 1
+        )
+
+    def test_lesson_confirm_subject_not_taught_to_class_does_not_crash(self):
+        self.student.telegram_chat_id = "2006"
+        self.student.save(update_fields=["telegram_chat_id"])
+        chemistry = Subject.objects.create(name="Chemistry")
+        update, context = _make_callback_update(
+            chat_id="2006", data=f"{handlers.LESSON_CONFIRM_CALLBACK_PREFIX}{chemistry.id}"
+        )
+        asyncio.run(handlers.lesson_confirm(update, context))
+        (text,), _ = update.callback_query.edit_message_text.call_args
+        self.assertIn("isn't taught", text)
+        self.assertEqual(SubjectAttendanceRecord.objects.count(), 0)
+
+    def test_lesson_confirm_unknown_subject_id_does_not_crash(self):
+        self.student.telegram_chat_id = "2007"
+        self.student.save(update_fields=["telegram_chat_id"])
+        update, context = _make_callback_update(
+            chat_id="2007", data=f"{handlers.LESSON_CONFIRM_CALLBACK_PREFIX}999999"
+        )
+        asyncio.run(handlers.lesson_confirm(update, context))
+        (text,), _ = update.callback_query.edit_message_text.call_args
+        self.assertIn("no longer exists", text)
+
+    def test_lesson_confirm_from_unlinked_chat_does_not_crash(self):
+        update, context = _make_callback_update(
+            chat_id="9998", data=f"{handlers.LESSON_CONFIRM_CALLBACK_PREFIX}{self.math.id}"
+        )
+        asyncio.run(handlers.lesson_confirm(update, context))
+        (text,), _ = update.callback_query.edit_message_text.call_args
+        self.assertIn("isn't linked", text)
+        self.assertEqual(SubjectAttendanceRecord.objects.count(), 0)
         self.assertEqual(AttendanceRecord.objects.count(), 0)

@@ -32,10 +32,12 @@ def send_telegram_message(chat_id, text, reply_markup=None):
         return False
 
 
-def notify(recipient, message, related_attendance=None):
+def notify(recipient, message, related_attendance=None, related_subject_attendance=None):
     """Notify a recipient (a User or Parent instance) via Telegram, and always
     record the attempt in NotificationLog so the demo shows the fan-out even
-    when TELEGRAM_BOT_TOKEN isn't set."""
+    when TELEGRAM_BOT_TOKEN isn't set. related_attendance/related_subject_attendance
+    are mutually exclusive — pass whichever check-in triggered this notification,
+    or neither."""
     from attendance.models import NotificationLog
 
     chat_id = getattr(recipient, "telegram_chat_id", None)
@@ -47,5 +49,6 @@ def notify(recipient, message, related_attendance=None):
         recipient_label=label,
         message=message,
         related_attendance=related_attendance,
+        related_subject_attendance=related_subject_attendance,
     )
     return sent

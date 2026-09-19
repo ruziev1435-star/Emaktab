@@ -31,7 +31,7 @@ structure to this project's actual folders:
 | Auth & roles | `accounts/` — custom `User` model (role: principal / counsellor / teacher / student), `Parent` model (notification-only, no login), role-based dashboard views, student password-change |
 | Routes | `kundalikplus/urls.py` is the root router; it `include()`s each app's own `urls.py` (e.g. `meetings/urls.py`, `attendance/urls.py`) under an app namespace |
 | Meetings / calendar booking | `meetings/` — `StaffAvailability`, `Meeting` |
-| Attendance confirmation | `attendance/` — `AttendanceRecord`, `NotificationLog`, `services.py` (the notify-homeroom-teacher/subject-teachers/parents fan-out) |
+| Attendance confirmation | `attendance/` — `AttendanceRecord` (building entry), `SubjectAttendanceRecord` (per-subject check-in), `NotificationLog`, `services.py` (the two-step notify fan-out) |
 | Unit tests & exam schedule | `quizzes/` — `Quiz`/`Question`/`Choice`/`QuizAttempt`, `Exam` |
 | Library / news aggregation | `library/` — `Article` (aggregated, not authored, content) |
 | Telegram bot | `bot/` — `notify.py` (outbound sender used by other apps); bot command handlers (`/start`, meeting booking, attendance button) live here too |
@@ -101,6 +101,41 @@ command and the callback use to restrict this to linked student accounts
 (mirrored in `attendance.views.confirm_web` for the web fallback, since
 `limit_choices_to` on `AttendanceRecord.student` isn't ORM-enforced).
 
+**Attendance is two separate steps**, each with its own model/service/bot
+command — don't merge them:
+1. `/attendance` → `confirm_student_attendance()` → `AttendanceRecord`
+   (once/day). "Entered the building." Notifies **homeroom teacher +
+   parents only** — not subject teachers, since no specific class has been
+   named yet.
+2. `/lesson` → lists that day's subjects (`attendance.services.subjects_for_student()`,
+   from `core.ClassSubjectTeacher`) as inline buttons; tapping one calls
+   `confirm_subject_attendance()` → `SubjectAttendanceRecord` (repeatable
+   per subject per day — a student attends multiple classes). Notifies
+   **that subject's teacher + homeroom teacher + parents**, deduplicated
+   if the homeroom teacher also teaches that subject to that class.
+
+`NotificationLog` has two nullable FKs — `related_attendance` and
+`related_subject_attendance` — for the two record types; `notify()` in
+`bot/notify.py` takes both as optional kwargs. Step 2 has no hard
+dependency on step 1 having happened first (nothing checks
+`AttendanceRecord` before allowing a `/lesson` check-in) — this was a
+deliberate simplification, not an oversight; tighten it only if asked.
+
+Async gotcha worth flagging for anyone adding a third step: any helper
+called from a bot handler that touches the ORM eagerly (not just returns
+a lazy `QuerySet`) — `subjects_for_student()` does, via
+`getattr(student, "student_profile", None)` — must itself be wrapped in
+`sync_to_async`, not just whatever you do with its return value.
+`sync_to_async(list)(subjects_for_student(student))` is wrong: Python
+evaluates `subjects_for_student(student)` synchronously *before* handing
+the result to `sync_to_async(list)`, so the ORM hit still happens in the
+async context and raises `SynchronousOnlyOperation`. Use
+`sync_to_async(lambda: list(subjects_for_student(student)))()` instead —
+this is the actual bug `bot/handlers.py::lesson()` had until it was
+caught by `bot/tests.py::LessonHandlerTests` (which is exactly why those
+handler tests run the real async function via `asyncio.run()` instead of
+mocking it away).
+
 When testing linking logic in code, note that `TestCase` (transactional,
 single connection) and `sync_to_async` (runs on a different thread) deadlock
 against each other on SQLite — use `TransactionTestCase` for anything that
@@ -120,8 +155,12 @@ python manage.py runserver
 
 - Function-based views throughout (keep it simple for a small MVP team).
 - No `routes/` or `models/` top-level folders — see the table above instead.
-- No automated tests yet; each app has an empty `tests.py` stub from
-  `startapp` (unused so far).
+- `attendance/tests.py` and `bot/tests.py` have real coverage (service
+  fan-out, views, bot handlers via fake `Update`/`Context` objects — see
+  the async gotcha above for why handler tests run the real function
+  rather than mocking it). Other apps still have the empty `tests.py`
+  stub from `startapp` (unused so far) — follow the attendance/bot
+  pattern when a new feature needs one, not the empty stub.
 - Out of scope for the MVP (mention only if asked; don't build): the
   gamification / virtual-currency system (earning currency for discipline,
   grades, olympiad wins; redeemable for absence days or exam-fee coverage).

@@ -4,7 +4,17 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler
 
-from bot.handlers import ATTENDANCE_CONFIRM_CALLBACK, attendance, attendance_confirm, link, start, whoami
+from bot.handlers import (
+    ATTENDANCE_CONFIRM_CALLBACK,
+    LESSON_CONFIRM_CALLBACK_PREFIX,
+    attendance,
+    attendance_confirm,
+    lesson,
+    lesson_confirm,
+    link,
+    start,
+    whoami,
+)
 
 
 def _ensure_event_loop():
@@ -45,6 +55,10 @@ class Command(BaseCommand):
         application.add_handler(CommandHandler("attendance", attendance))
         application.add_handler(
             CallbackQueryHandler(attendance_confirm, pattern=f"^{ATTENDANCE_CONFIRM_CALLBACK}$")
+        )
+        application.add_handler(CommandHandler("lesson", lesson))
+        application.add_handler(
+            CallbackQueryHandler(lesson_confirm, pattern=f"^{LESSON_CONFIRM_CALLBACK_PREFIX}\\d+$")
         )
 
         self.stdout.write(self.style.SUCCESS("Kundalik+ bot starting (long polling)... Ctrl+C to stop."))

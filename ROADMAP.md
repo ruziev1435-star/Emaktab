@@ -44,13 +44,15 @@ for Postgres later), **Bootstrap 5** templates with no build step, and
    connects their Telegram via a link code or one-tap deep link), confirmed
    the bot responds (`/start`, `/link`, `/whoami`), running via long
    polling. The plumbing other bot features build on.
-7. **Attendance confirmation** — a manual Telegram button a student taps to
-   confirm they're in the building, notifying the homeroom teacher, that
-   day's subject teachers, and parents. `/attendance` sends the button (a
-   `CallbackQueryHandler` handles the tap); a web fallback at
-   `/attendance/confirm/` covers the no-live-bot demo case. Both paths
-   restrict to student accounts (`limit_choices_to` alone doesn't enforce
-   that at the ORM level).
+7. **Attendance confirmation — two-step check-in.** Step 1: `/attendance`
+   (with a web fallback at `/attendance/confirm/`) confirms building entry,
+   notifying the homeroom teacher and parents. Step 2: `/lesson` lists that
+   day's subjects for the student's class as inline buttons; tapping one
+   confirms they're in that specific class, notifying that subject's
+   teacher, the homeroom teacher, and parents. Both steps use a
+   `CallbackQueryHandler` for the button tap and restrict to student
+   accounts (`limit_choices_to` alone doesn't enforce that at the ORM
+   level). Step 2 is repeatable per subject per day; step 1 is once/day.
 
 ### Pending
 

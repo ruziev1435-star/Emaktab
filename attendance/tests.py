@@ -6,11 +6,14 @@ from django.utils import timezone
 from accounts.models import Parent, StudentProfile, User
 from core.models import ClassSubjectTeacher, SchoolClass, Subject
 
-from .models import AttendanceRecord, NotificationLog
-from .services import confirm_student_attendance
+from .models import AttendanceRecord, NotificationLog, SubjectAttendanceRecord
+from .services import confirm_student_attendance, confirm_subject_attendance, subjects_for_student
 
 
 class ConfirmStudentAttendanceTests(TestCase):
+    """Step 1: building entry. Notifies homeroom teacher + parents only —
+    subject teachers are step 2's job (confirm_subject_attendance)."""
+
     def setUp(self):
         self.homeroom_teacher = User.objects.create_user(
             username="homeroom", password="x", role=User.Role.TEACHER, first_name="Homeroom"
@@ -21,9 +24,9 @@ class ConfirmStudentAttendanceTests(TestCase):
         self.school_class = SchoolClass.objects.create(
             name="9-A", homeroom_teacher=self.homeroom_teacher
         )
-        subject = Subject.objects.create(name="Math")
+        self.subject = Subject.objects.create(name="Math")
         ClassSubjectTeacher.objects.create(
-            school_class=self.school_class, subject=subject, teacher=self.subject_teacher
+            school_class=self.school_class, subject=self.subject, teacher=self.subject_teacher
         )
         self.student = User.objects.create_user(
             username="dilnoza", password="x", role=User.Role.STUDENT, first_name="Dilnoza"
@@ -34,27 +37,17 @@ class ConfirmStudentAttendanceTests(TestCase):
         self.parent = Parent.objects.create(full_name="Parent of Dilnoza")
         self.parent.students.add(self.profile)
 
-    def test_creates_record_and_notifies_homeroom_subject_teacher_and_parent(self):
+    def test_creates_record_and_notifies_homeroom_and_parent_only(self):
         record = confirm_student_attendance(self.student, via="telegram")
         self.assertEqual(record.student, self.student)
         self.assertEqual(record.date, timezone.localdate())
         self.assertEqual(record.confirmed_via, "telegram")
 
         labels = list(NotificationLog.objects.values_list("recipient_label", flat=True))
-        self.assertEqual(len(labels), 3)
+        self.assertEqual(len(labels), 2)
         self.assertTrue(any("Homeroom" in label for label in labels))
-        self.assertTrue(any("Subject" in label for label in labels))
         self.assertTrue(any("Parent of Dilnoza" in label for label in labels))
-
-    def test_homeroom_teacher_not_double_notified_when_also_a_subject_teacher(self):
-        ClassSubjectTeacher.objects.create(
-            school_class=self.school_class,
-            subject=Subject.objects.create(name="Homeroom period"),
-            teacher=self.homeroom_teacher,
-        )
-        confirm_student_attendance(self.student, via="web")
-        homeroom_notifications = NotificationLog.objects.filter(recipient_label__icontains="Homeroom")
-        self.assertEqual(homeroom_notifications.count(), 1)
+        self.assertFalse(any("Subject" in label for label in labels))
 
     def test_second_confirmation_same_day_raises_integrity_error(self):
         confirm_student_attendance(self.student, via="web")
@@ -75,8 +68,105 @@ class ConfirmStudentAttendanceTests(TestCase):
         confirm_student_attendance(self.student, via="web")
         homeroom_notifications = NotificationLog.objects.filter(recipient_label__icontains="Homeroom")
         self.assertEqual(homeroom_notifications.count(), 0)
-        subject_notifications = NotificationLog.objects.filter(recipient_label__icontains="Subject")
-        self.assertEqual(subject_notifications.count(), 1)
+        self.assertEqual(NotificationLog.objects.count(), 1)  # parent only
+
+
+class ConfirmSubjectAttendanceTests(TestCase):
+    """Step 2: subject/lesson check-in. Notifies that subject's teacher,
+    the homeroom teacher, and parents — repeatable per subject per day,
+    unlike the once-a-day building entry above."""
+
+    def setUp(self):
+        self.homeroom_teacher = User.objects.create_user(
+            username="homeroom", password="x", role=User.Role.TEACHER, first_name="Homeroom"
+        )
+        self.math_teacher = User.objects.create_user(
+            username="mathteacher", password="x", role=User.Role.TEACHER, first_name="MathT"
+        )
+        self.school_class = SchoolClass.objects.create(
+            name="9-A", homeroom_teacher=self.homeroom_teacher
+        )
+        self.math = Subject.objects.create(name="Math")
+        ClassSubjectTeacher.objects.create(
+            school_class=self.school_class, subject=self.math, teacher=self.math_teacher
+        )
+        self.student = User.objects.create_user(
+            username="dilnoza", password="x", role=User.Role.STUDENT, first_name="Dilnoza"
+        )
+        self.profile = StudentProfile.objects.create(
+            user=self.student, school_class=self.school_class
+        )
+        self.parent = Parent.objects.create(full_name="Parent of Dilnoza")
+        self.parent.students.add(self.profile)
+
+    def test_creates_record_and_notifies_subject_teacher_homeroom_and_parent(self):
+        record = confirm_subject_attendance(self.student, self.math, via="telegram")
+        self.assertEqual(record.student, self.student)
+        self.assertEqual(record.subject, self.math)
+        self.assertEqual(record.date, timezone.localdate())
+
+        labels = list(NotificationLog.objects.values_list("recipient_label", flat=True))
+        self.assertEqual(len(labels), 3)
+        self.assertTrue(any("MathT" in label for label in labels))
+        self.assertTrue(any("Homeroom" in label for label in labels))
+        self.assertTrue(any("Parent of Dilnoza" in label for label in labels))
+
+    def test_homeroom_teacher_not_double_notified_when_also_the_subject_teacher(self):
+        # Homeroom teacher also teaches Math to this class.
+        ClassSubjectTeacher.objects.filter(school_class=self.school_class, subject=self.math).update(
+            teacher=self.homeroom_teacher
+        )
+        confirm_subject_attendance(self.student, self.math, via="web")
+        homeroom_notifications = NotificationLog.objects.filter(recipient_label__icontains="Homeroom")
+        self.assertEqual(homeroom_notifications.count(), 1)
+
+    def test_second_confirmation_same_subject_same_day_raises_integrity_error(self):
+        confirm_subject_attendance(self.student, self.math, via="web")
+        with self.assertRaises(IntegrityError):
+            confirm_subject_attendance(self.student, self.math, via="web")
+
+    def test_can_confirm_multiple_different_subjects_same_day(self):
+        physics = Subject.objects.create(name="Physics")
+        ClassSubjectTeacher.objects.create(
+            school_class=self.school_class, subject=physics, teacher=self.math_teacher
+        )
+        confirm_subject_attendance(self.student, self.math, via="web")
+        confirm_subject_attendance(self.student, physics, via="web")
+        self.assertEqual(
+            SubjectAttendanceRecord.objects.filter(student=self.student).count(), 2
+        )
+
+    def test_subject_not_taught_to_class_raises_value_error(self):
+        other_subject = Subject.objects.create(name="Chemistry")
+        with self.assertRaises(ValueError):
+            confirm_subject_attendance(self.student, other_subject, via="telegram")
+        self.assertEqual(SubjectAttendanceRecord.objects.count(), 0)
+        self.assertEqual(NotificationLog.objects.count(), 0)
+
+    def test_student_without_class_raises_value_error_not_crash(self):
+        lonely_student = User.objects.create_user(
+            username="lonely", password="x", role=User.Role.STUDENT
+        )
+        with self.assertRaises(ValueError):
+            confirm_subject_attendance(lonely_student, self.math, via="telegram")
+        self.assertEqual(NotificationLog.objects.count(), 0)
+
+
+class SubjectsForStudentTests(TestCase):
+    def test_returns_empty_queryset_for_student_without_class(self):
+        student = User.objects.create_user(username="lonely", password="x", role=User.Role.STUDENT)
+        self.assertEqual(list(subjects_for_student(student)), [])
+
+    def test_returns_assignments_for_students_class(self):
+        teacher = User.objects.create_user(username="t", password="x", role=User.Role.TEACHER)
+        school_class = SchoolClass.objects.create(name="9-A")
+        math = Subject.objects.create(name="Math")
+        assignment = ClassSubjectTeacher.objects.create(
+            school_class=school_class, subject=math, teacher=teacher
+        )
+        student = User.objects.create_user(username="s", password="x", role=User.Role.STUDENT)
+        StudentProfile.objects.create(user=student, school_class=school_class)
+        self.assertEqual(list(subjects_for_student(student)), [assignment])
 
 
 class ConfirmWebViewTests(TestCase):

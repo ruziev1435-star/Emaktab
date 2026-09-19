@@ -85,6 +85,23 @@ assumptions to still hold.
   (attendance confirmation). Still broken: `/quizzes/`, `/library/`
   (task #8/#9, not built yet). `/meetings/mine/` was in this list too but
   was fixed earlier.
+- A helper called from an async bot handler that touches the ORM *eagerly*
+  (not just returns a lazy `QuerySet`) must itself be wrapped in
+  `sync_to_async` — wrapping only what you do with its return value isn't
+  enough. `attendance.services.subjects_for_student()` calls
+  `getattr(student, "student_profile", None)`, which hits the DB the
+  moment it's called (reverse OneToOne access isn't lazy the way
+  `.filter()` is). `bot/handlers.py::lesson()` originally did
+  `sync_to_async(list)(subjects_for_student(student))` — Python evaluates
+  `subjects_for_student(student)` *before* calling `sync_to_async(list)`
+  with the result, so that DB hit still ran synchronously inside the
+  async handler and raised `SynchronousOnlyOperation`. Fixed by wrapping
+  the whole call: `sync_to_async(lambda: list(subjects_for_student(student)))()`.
+  This only surfaced by running the real handler via `asyncio.run()` in a
+  test (`bot/tests.py::LessonHandlerTests`) — a test that mocks the
+  service call away would have missed it entirely, so for any new
+  bot-handler feature, test at least one path through the real async
+  function, not just the service function in isolation.
 - Catching `IntegrityError` around a bare `.create()` (e.g.
   `attendance.services.confirm_student_attendance`'s duplicate-per-day
   guard) leaves the *enclosing* transaction broken if there is one — the
