@@ -1,11 +1,10 @@
-# Task 2 — Three deliberate errors
+# Task 2 — breaking it on purpose
 
-Compiler: `g++ 13.3.0` (same clang/gcc-family diagnostics VS Code's C/C++ extension shows).
-Command used for each: `g++ <file>.cpp -o <out>`
+Compiled each one with `g++ <file>.cpp -o <out>`. Same errors show up in VS Code's terminal.
 
-## Error 1 — Missing semicolon (`break1_missing_semicolon.cpp`)
+## Error 1 — forgot a semicolon
 
-Changed line 4 by deleting the trailing `;` after `std::endl`.
+Deleted the `;` at the end of line 4.
 
 ```
 break1_missing_semicolon.cpp: In function 'int main()':
@@ -17,11 +16,11 @@ break1_missing_semicolon.cpp:4:47: error: expected ';' before 'return'
       |     ~~~~~~
 ```
 
-**Cause:** every C++ statement must end in `;`. The compiler doesn't know statement 4 is finished, so it keeps reading into line 5 and reports the error at the point it got confused (before `return`) — not on the line that's actually missing the semicolon.
+**What happened:** C++ needs a `;` to know a line is done. Without it, the compiler just keeps reading into the next line and gets confused there instead — so the error points at `return`, not at the actual missing semicolon. Classic off-by-one-line error message.
 
-## Error 2 — Undeclared variable (`break2_undeclared_variable.cpp`)
+## Error 2 — used a variable I never made
 
-Used a variable `name` that was never declared or initialized.
+Typed `name` in the cout line but never declared it anywhere.
 
 ```
 break2_undeclared_variable.cpp: In function 'int main()':
@@ -31,11 +30,11 @@ break2_undeclared_variable.cpp:4:31: error: 'name' was not declared in this scop
       |                               tzname
 ```
 
-**Cause:** every identifier must be declared before use. The compiler even suggests a near-miss (`tzname`, a symbol from a system header) — a reminder that "did you mean" suggestions aren't always what you actually want.
+**What happened:** you can't use a variable before declaring it — the compiler has no idea what `name` is supposed to be. It even offers `tzname` as a "did you mean," which is some random system symbol that just happens to look similar. Not helpful here, but funny.
 
-## Error 3 — Mismatched brace (`break3_mismatched_brace.cpp`)
+## Error 3 — missing closing brace
 
-Deleted the closing `}` of `main`.
+Deleted the `}` that closes `main()`.
 
 ```
 break3_mismatched_brace.cpp: In function 'int main()':
@@ -47,4 +46,4 @@ break3_mismatched_brace.cpp:3:12: note: to match this '{'
       |            ^
 ```
 
-**Cause:** every `{` needs a matching `}`. The compiler reaches the end of the file still "inside" `main`, so instead of pointing at one bad line it points back to the unmatched opening brace and asks you to close it.
+**What happened:** every `{` needs its own `}`. The file just ends while the compiler still thinks it's inside `main()`, so it can't point at one broken line — instead it jumps back to show you exactly which `{` never got closed.
