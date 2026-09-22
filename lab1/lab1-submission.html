@@ -2,17 +2,30 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Task 2 — breaking it on purpose</title>
+<title>Lab 1 — Anvar</title>
 <style>
-  @page { size: A4; margin: 22mm 18mm; }
+  @page { size: A4; margin: 20mm 18mm; }
   body {
     font-family: Georgia, 'Times New Roman', serif;
     color: #1c1c1c;
     line-height: 1.55;
     font-size: 12.5pt;
+    margin: 0;
+  }
+  .page {
     max-width: 680px;
     margin: 0 auto;
   }
+  .flowchart-page { page-break-after: always; text-align: center; }
+  .flowchart-page h1 { font-size: 18pt; margin: 0 0 4pt; text-align: left; }
+  .flowchart-page .sub { color: #555; font-size: 10.5pt; margin: 0 0 18pt; text-align: left; }
+  .flowchart-page img {
+    width: 100%;
+    max-width: 620px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+  }
+  .errors-page { page-break-before: always; }
   h1 { font-size: 20pt; margin-bottom: 2pt; }
   .sub { color: #555; font-size: 10.5pt; margin-bottom: 22pt; }
   h2 { font-size: 14.5pt; margin-top: 26pt; margin-bottom: 6pt; border-bottom: 1px solid #ccc; padding-bottom: 4pt; }
@@ -40,6 +53,13 @@
 </head>
 <body>
 
+<div class="page flowchart-page">
+  <h1>Task 3 — Metro Budget Flowchart</h1>
+  <p class="sub">Anvar &middot; Lab 1</p>
+  <img src="flowchart-screenshot.png" alt="Metro budget flowchart">
+</div>
+
+<div class="page errors-page">
 <h1>Task 2 — breaking it on purpose</h1>
 <p class="sub">Anvar &middot; Lab 1</p>
 
@@ -75,6 +95,7 @@ break3_mismatched_brace.cpp:3:12: note: to match this '{'
     3 | int main() {
       |            ^</pre>
 <p><strong>What happened:</strong> I deleted the closing brace on <code>main()</code> by accident. Since every <code>{</code> needs a matching <code>}</code>, the compiler reached the end of the file still thinking it was inside <code>main()</code> &mdash; so instead of blaming one specific line, it pointed all the way back to the opening brace I never closed.</p>
+</div>
 
 </body>
 </html>
