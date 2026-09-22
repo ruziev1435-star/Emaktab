@@ -8,10 +8,10 @@ Deleted the `;` at the end of line 4.
 
 ```
 break1_missing_semicolon.cpp: In function 'int main()':
-break1_missing_semicolon.cpp:4:47: error: expected ';' before 'return'
-    4 |     std::cout << "Hello, Ruslan!" << std::endl
-      |                                               ^
-      |                                               ;
+break1_missing_semicolon.cpp:4:46: error: expected ';' before 'return'
+    4 |     std::cout << "Hello, Anvar!" << std::endl
+      |                                              ^
+      |                                              ;
     5 |     return 0;
       |     ~~~~~~
 ```

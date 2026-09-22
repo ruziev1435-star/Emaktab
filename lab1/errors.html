@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Task 2 — breaking it on purpose</title>
+<style>
+  @page { size: A4; margin: 22mm 18mm; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #1c1c1c;
+    line-height: 1.55;
+    font-size: 12.5pt;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 20pt; margin-bottom: 2pt; }
+  .sub { color: #555; font-size: 10.5pt; margin-bottom: 22pt; }
+  h2 { font-size: 14.5pt; margin-top: 26pt; margin-bottom: 6pt; border-bottom: 1px solid #ccc; padding-bottom: 4pt; }
+  p { margin: 8pt 0; }
+  code {
+    font-family: 'Courier New', monospace;
+    background: #f0f0ee;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 11pt;
+  }
+  pre {
+    font-family: 'Courier New', monospace;
+    background: #1c1e24;
+    color: #e8e6da;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  strong { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>Task 2 — breaking it on purpose</h1>
+<p class="sub">Anvar &middot; Lab 1</p>
+
+<p>Compiled each one with <code>g++ &lt;file&gt;.cpp -o &lt;out&gt;</code>. Same errors show up in VS Code's terminal.</p>
+
+<h2>Error 1 — forgot a semicolon</h2>
+<p>Deleted the <code>;</code> at the end of line 4.</p>
+<pre>break1_missing_semicolon.cpp: In function 'int main()':
+break1_missing_semicolon.cpp:4:46: error: expected ';' before 'return'
+    4 |     std::cout &lt;&lt; "Hello, Anvar!" &lt;&lt; std::endl
+      |                                              ^
+      |                                              ;
+    5 |     return 0;
+      |     ~~~~~~</pre>
+<p><strong>What happened:</strong> C++ needs a <code>;</code> to know a line is done. Without it, the compiler just keeps reading into the next line and gets confused there instead &mdash; so the error points at <code>return</code>, not at the actual missing semicolon. Classic off-by-one-line error message.</p>
+
+<h2>Error 2 — used a variable I never made</h2>
+<p>Typed <code>name</code> in the cout line but never declared it anywhere.</p>
+<pre>break2_undeclared_variable.cpp: In function 'int main()':
+break2_undeclared_variable.cpp:4:31: error: 'name' was not declared in this scope; did you mean 'tzname'?
+    4 |     std::cout &lt;&lt; "Hello, " &lt;&lt; name &lt;&lt; "!" &lt;&lt; std::endl;
+      |                               ^~~~
+      |                               tzname</pre>
+<p><strong>What happened:</strong> you can't use a variable before declaring it &mdash; the compiler has no idea what <code>name</code> is supposed to be. It even offers <code>tzname</code> as a "did you mean," which is some random system symbol that just happens to look similar. Not helpful here, but funny.</p>
+
+<h2>Error 3 — missing closing brace</h2>
+<p>Deleted the <code>}</code> that closes <code>main()</code>.</p>
+<pre>break3_mismatched_brace.cpp: In function 'int main()':
+break3_mismatched_brace.cpp:5:14: error: expected '}' at end of input
+    5 |     return 0;
+      |              ^
+break3_mismatched_brace.cpp:3:12: note: to match this '{'
+    3 | int main() {
+      |            ^</pre>
+<p><strong>What happened:</strong> every <code>{</code> needs its own <code>}</code>. The file just ends while the compiler still thinks it's inside <code>main()</code>, so it can't point at one broken line &mdash; instead it jumps back to show you exactly which <code>{</code> never got closed.</p>
+
+</body>
+</html>
