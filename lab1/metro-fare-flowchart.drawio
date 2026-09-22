@@ -1,14 +1,14 @@
 <mxfile host="app.diagrams.net" agent="lab1" version="24.0.0">
-  <diagram name="Metro Fare Flowchart" id="metro-fare-flowchart">
-    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="950" pageHeight="1430" math="0" shadow="0">
+  <diagram name="Metro Budget Flowchart" id="metro-budget-flowchart">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="950" pageHeight="1160" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <mxCell id="title" value="Metro fare — how I worked it out" style="text;html=1;align=left;valign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="title" value="Metro budget check — how I worked it out" style="text;html=1;align=left;valign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="12" width="700" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="subtitle" value="Fare tiers I used: rides 1&#8211;10 &#8594; 25 som each, 11&#8211;30 &#8594; 20 som each, 31+ &#8594; 15 som each. (Swap in the real numbers if the instructor gave different ones.)" style="text;html=1;align=left;valign=middle;fontSize=11;fontColor=#666666;whiteSpace=wrap;" vertex="1" parent="1">
+        <mxCell id="subtitle" value="Problem: a student pays 2,100 so'm per metro ride. Given the number of rides, print the total and say whether it goes over a 60,000 so'm budget." style="text;html=1;align=left;valign=middle;fontSize=11;fontColor=#666666;whiteSpace=wrap;" vertex="1" parent="1">
           <mxGeometry x="40" y="46" width="860" height="34" as="geometry" />
         </mxCell>
 
@@ -16,144 +16,120 @@
           <mxGeometry x="290" y="95" width="180" height="55" as="geometry" />
         </mxCell>
 
-        <mxCell id="input" value="&lt;b&gt;Input: rides&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;ask how many trips they bought&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
+        <mxCell id="read" value="&lt;b&gt;READ rides&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;ask how many rides the student takes&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="280" y="175" width="200" height="58" as="geometry" />
         </mxCell>
 
-        <mxCell id="init" value="&lt;b&gt;total = 0;  r = rides&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;nothing charged yet &#8212; r tracks what's left to price&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="230" y="258" width="300" height="62" as="geometry" />
+        <mxCell id="setfare" value="&lt;b&gt;SET fare = 2100&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;so'm charged per ride&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="260" y="258" width="240" height="58" as="geometry" />
         </mxCell>
 
-        <mxCell id="d1" value="&lt;b&gt;r &#8804; 10 ?&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;did they buy 10 trips or fewer?&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="250" y="345" width="260" height="140" as="geometry" />
+        <mxCell id="settotal" value="&lt;b&gt;SET total = rides &#215; fare&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;total so'm spent this month&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="230" y="341" width="300" height="58" as="geometry" />
         </mxCell>
 
-        <mxCell id="boxA" value="&lt;b&gt;total += 10&#215;25;  r -= 10&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;charge the first 10 at full price, then keep going&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="230" y="535" width="300" height="62" as="geometry" />
+        <mxCell id="printtotal" value="&lt;b&gt;PRINT total&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;show the student what they'd spend&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="250" y="424" width="260" height="58" as="geometry" />
         </mxCell>
 
-        <mxCell id="boxB" value="&lt;b&gt;total += r&#215;25 &#8212; done&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;10 or fewer: everything's full price&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="650" y="385" width="200" height="66" as="geometry" />
+        <mxCell id="decision" value="&lt;b&gt;total &gt; 60000 ?&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;did they blow the 60,000 so'm budget?&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="260" y="507" width="240" height="140" as="geometry" />
         </mxCell>
 
-        <mxCell id="d2" value="&lt;b&gt;r &#8804; 20 ?&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;does the rest fit in the next 20 trips?&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="240" y="617" width="280" height="140" as="geometry" />
+        <mxCell id="overbudget" value="&lt;b&gt;PRINT &quot;over budget&quot;&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;yep &#8212; flag it&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fbe6dc;strokeColor=#a83e1f;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="650" y="544" width="220" height="66" as="geometry" />
         </mxCell>
 
-        <mxCell id="boxE" value="&lt;b&gt;total += r&#215;20 &#8212; done&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;the rest fits the middle tier&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="650" y="657" width="200" height="66" as="geometry" />
+        <mxCell id="withinbudget" value="&lt;b&gt;PRINT &quot;within budget&quot;&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;nope &#8212; they're fine&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f1e9;strokeColor=#276e4d;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="250" y="687" width="260" height="58" as="geometry" />
         </mxCell>
 
-        <mxCell id="boxC" value="&lt;b&gt;total += 20&#215;20;  r -= 20&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;charge the whole middle tier, then keep going&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="230" y="807" width="300" height="58" as="geometry" />
+        <mxCell id="end" value="&lt;b&gt;End&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;&quot;&gt;done&lt;/span&gt;" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="290" y="790" width="180" height="55" as="geometry" />
         </mxCell>
 
-        <mxCell id="boxD" value="&lt;b&gt;total += r&#215;15&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#555555;&quot;&gt;whatever's left is the cheapest rate &#8212; no more tiers&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="250" y="880" width="260" height="58" as="geometry" />
-        </mxCell>
-
-        <mxCell id="output" value="&lt;b&gt;Output total&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;color:#2c6e3f;&quot;&gt;hand the rider their total&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="270" y="963" width="220" height="58" as="geometry" />
-        </mxCell>
-
-        <mxCell id="end" value="&lt;b&gt;End&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:9px;&quot;&gt;fare's ready to show&lt;/span&gt;" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="290" y="1046" width="180" height="55" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="start" target="input">
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="start" target="read">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="input" target="init">
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="read" target="setfare">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="init" target="d1">
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="setfare" target="settotal">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e4" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;fontColor=#a83e1f;" edge="1" parent="1" source="d1" target="boxA">
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="settotal" target="printtotal">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e5" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;fontColor=#276e4d;" edge="1" parent="1" source="d1" target="boxB">
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="printtotal" target="decision">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="boxA" target="d2">
+        <mxCell id="e6" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;fontColor=#a83e1f;" edge="1" parent="1" source="decision" target="overbudget">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e7" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;fontColor=#a83e1f;" edge="1" parent="1" source="d2" target="boxC">
+        <mxCell id="e7" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;fontColor=#276e4d;" edge="1" parent="1" source="decision" target="withinbudget">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e8" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;fontColor=#276e4d;" edge="1" parent="1" source="d2" target="boxE">
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="withinbudget" target="end">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="boxC" target="boxD">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="boxD" target="output">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="boxB" target="output">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="boxE" target="output">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="output" target="end">
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="overbudget" target="end">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="tracetitle" value="Try it &#8212; tracing 20, 30, and 40 rides by hand" style="text;html=1;align=left;valign=middle;fontSize=14;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1130" width="700" height="28" as="geometry" />
+        <mxCell id="tracetitle" value="Try it &#8212; plugging in 20, 30, and 40 rides" style="text;html=1;align=left;valign=middle;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="870" width="700" height="28" as="geometry" />
         </mxCell>
 
         <mxCell id="th0" value="Rides" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8edf5;strokeColor=#b0b8c8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1170" width="90" height="38" as="geometry" />
+          <mxGeometry x="40" y="910" width="90" height="38" as="geometry" />
         </mxCell>
-        <mxCell id="th1" value="r &#8804; 10 ?" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8edf5;strokeColor=#b0b8c8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="130" y="1170" width="290" height="38" as="geometry" />
+        <mxCell id="th1" value="total = rides &#215; 2100" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8edf5;strokeColor=#b0b8c8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="130" y="910" width="290" height="38" as="geometry" />
         </mxCell>
-        <mxCell id="th2" value="r &#8804; 20 ? (after first tier)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8edf5;strokeColor=#b0b8c8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="420" y="1170" width="290" height="38" as="geometry" />
+        <mxCell id="th2" value="total &gt; 60000 ?" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8edf5;strokeColor=#b0b8c8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="910" width="290" height="38" as="geometry" />
         </mxCell>
-        <mxCell id="th3" value="Total" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8edf5;strokeColor=#b0b8c8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="710" y="1170" width="170" height="38" as="geometry" />
+        <mxCell id="th3" value="Result" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8edf5;strokeColor=#b0b8c8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="710" y="910" width="170" height="38" as="geometry" />
         </mxCell>
 
         <mxCell id="r1c0" value="20" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1208" width="90" height="58" as="geometry" />
+          <mxGeometry x="40" y="948" width="90" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r1c1" value="No &#8594; charge 10&#215;25, 10 left" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="130" y="1208" width="290" height="58" as="geometry" />
+        <mxCell id="r1c1" value="20 &#215; 2100 = 42,000" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="130" y="948" width="290" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r1c2" value="Yes &#8594; charge 10&#215;20" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="420" y="1208" width="290" height="58" as="geometry" />
+        <mxCell id="r1c2" value="42,000 &gt; 60,000? No" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="420" y="948" width="290" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r1c3" value="250 + 200 = 450 som" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f1e9;strokeColor=#82b366;fontSize=12;fontStyle=1;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="710" y="1208" width="170" height="58" as="geometry" />
+        <mxCell id="r1c3" value="within budget" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f1e9;strokeColor=#82b366;fontSize=12;fontStyle=1;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="710" y="948" width="170" height="58" as="geometry" />
         </mxCell>
 
         <mxCell id="r2c0" value="30" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1266" width="90" height="58" as="geometry" />
+          <mxGeometry x="40" y="1006" width="90" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r2c1" value="No &#8594; charge 10&#215;25, 20 left" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="130" y="1266" width="290" height="58" as="geometry" />
+        <mxCell id="r2c1" value="30 &#215; 2100 = 63,000" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="130" y="1006" width="290" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r2c2" value="Yes &#8594; charge 20&#215;20" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="420" y="1266" width="290" height="58" as="geometry" />
+        <mxCell id="r2c2" value="63,000 &gt; 60,000? Yes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1006" width="290" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r2c3" value="250 + 400 = 650 som" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f1e9;strokeColor=#82b366;fontSize=12;fontStyle=1;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="710" y="1266" width="170" height="58" as="geometry" />
+        <mxCell id="r2c3" value="over budget" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fbe6dc;strokeColor=#a83e1f;fontSize=12;fontStyle=1;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="710" y="1006" width="170" height="58" as="geometry" />
         </mxCell>
 
         <mxCell id="r3c0" value="40" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1324" width="90" height="68" as="geometry" />
+          <mxGeometry x="40" y="1064" width="90" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r3c1" value="No &#8594; charge 10&#215;25, 30 left" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="130" y="1324" width="290" height="68" as="geometry" />
+        <mxCell id="r3c1" value="40 &#215; 2100 = 84,000" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="130" y="1064" width="290" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r3c2" value="No &#8594; charge 20&#215;20, 10 left; then 10&#215;15" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="420" y="1324" width="290" height="68" as="geometry" />
+        <mxCell id="r3c2" value="84,000 &gt; 60,000? Yes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=11;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1064" width="290" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r3c3" value="250 + 400 + 150 = 800 som" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f1e9;strokeColor=#82b366;fontSize=12;fontStyle=1;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="710" y="1324" width="170" height="68" as="geometry" />
+        <mxCell id="r3c3" value="over budget" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fbe6dc;strokeColor=#a83e1f;fontSize=12;fontStyle=1;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="710" y="1064" width="170" height="58" as="geometry" />
         </mxCell>
 
       </root>
