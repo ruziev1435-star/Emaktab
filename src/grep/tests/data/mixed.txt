@@ -1,0 +1,6 @@
+banana split
+Apple juice
+123 numbers 456
+a.b*c [x] ^caret$ end
+cherry pie
+no newline at the end apple

@@ -1,0 +1,12 @@
+Hello, world!
+	Indented with a tab
+Trailing spaces   
+
+
+
+After three empty lines
+
+  two spaces
+	
+
+End
